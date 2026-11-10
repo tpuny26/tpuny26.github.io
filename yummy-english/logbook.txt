@@ -1,0 +1,179 @@
+LOGBOOK PENGEMBANGAN MEDIA PEMBELAJARAN INTERAKTIF (MPI)
+
+Judul Proyek: Yummy English - Kosakata Makanan & Minuman (Teks Multimodal)
+Format: Web-Based Learning (HTML5, CSS, JS) - Single File
+Rasio Tampilan: 16:9 (Landscape)
+================================================================================
+
+FASE 1: INISIASI PROYEK & PERANCANGAN ALUR (CONCEPTING & FLOW)
+
+================================================================================
+
+[Tanggal: 20 Oktober 2026]
+
+[+] Fitur Baru: Inisiasi konsep dasar MPI berbasis web untuk materi teks multimodal (Kosakata Makanan & Minuman) untuk siswa SMP.
+[+] Fitur Baru: Menetapkan 5 modul utama pembelajaran (Materi, Listening, Speaking, Writing, Practice).
+[+] Fitur Baru: Pembuatan flowchart awal menggunakan diagram alur logika.
+[+] Revisi: Penyesuaian urutan alur instruksional. Modul "Practice" dipindah ke posisi paling akhir sebagai evaluasi penguatan setelah Materi, Listening, Speaking, dan Writing.
+[+] Desain: Pembuatan aset visual Storyboard dan Flowchart (berbasis gambar) untuk halaman utama dan struktur menu.
+
+================================================================================
+FASE 2: PENGEMBANGAN PROTOTIPE AWAL (VERSI 1.0)
+================================================================================
+[Tanggal: 27 Oktober 2026]
+[+] Fitur Baru: Pembuatan kode dasar HTML, CSS (Tailwind), dan JS dalam 1 file.
+[+] Fitur Baru: Implementasi pengecekan orientasi layar (memaksa user menggunakan mode Landscape di HP).
+[-] Bug Fix (Speaking): Fitur pengenalan suara (Speech Recognition) tidak berjalan. 
+    > Solusi: Memperbaiki logika Web Speech API, menambahkan indikator status ("Sedang merekam...", "Akses ditolak"), menangani error saat mic diblokir, menambahkan variabel isRecording untuk mencegah crash saat tombol diklik berulang, dan menambahkan logika "toleransi kemiripan" (isSimilar) agar pengucapan anak yang sedikit kurang sempurna tetap bisa dibenarkan.
+[+] Revisi (Layout): Merombak tampilan menu materi menjadi simetris (Grid 3x2). Menambahkan 1 kosakata minuman ("Soda") agar jumlah makanan dan minuman seimbang (masing-masing 6).
+[+] Revisi (Responsivitas): Mengganti ukuran kaku (pixel) dengan CSS viewport unit (vw, vh) dan fungsi clamp() agar antarmuka menyesuaikan diri di berbagai ukuran layar HP.
+================================================================================
+
+FASE 3: ROMBAK TOTAL UI/UX BERDASARKAN DESAIN STORYBOARD (VERSI 2.0)
+
+================================================================================
+
+[Tanggal: 3 November 2026]
+[+] Revisi Mayor: Merombak seluruh antarmuka (UI) agar sesuai dengan referensi desain gambar (Buku Menu Restoran Nafisya).
+[+] Fitur Baru: Pembuatan halaman "Home" dengan 4 tombol utama (Tujuan Pembelajaran, Panduan Penggunaan, Mulai Belajar, Identitas Pengembang).
+[+] Fitur Baru: Implementasi sistem Modal (Pop-up) untuk Tujuan, Panduan, dan Identitas tanpa berpindah halaman.
+[+] Fitur Baru: Pembuatan layout "Buku Menu" (Book layout) dengan animasi halaman (Page 1 & Page 2) untuk eksplorasi Materi.
+[+] Fitur Baru: Implementasi tombol Audio (Text-to-Speech) pada setiap item makanan/minuman di dalam buku menu.
+[+] Fitur Baru: Pembuatan halaman Uji Listening (mendengar audio dan memilih 1 dari 4 gambar).
+[+] Fitur Baru: Pembuatan halaman Uji Speaking (merekam suara untuk mencocokkan gambar target).
+[+] Fitur Baru: Pembuatan halaman Uji Writing (mengetik ejaan bahasa Inggris berdasarkan gambar dan referensi Word Bank).
+[+] Fitur Baru: Sistem navigasi antar-modul dan perhitungan skor otomatis.
+
+================================================================================
+
+FASE 4: PENYUSUNAN DOKUMEN AKADEMIK (PROPOSAL & TEORI)
+
+================================================================================
+
+[Tanggal: 3 November 2026]
+
+[+] Dokumen: Pembuatan draf Proposal Mini Riset (Bab 1, 2, dan 3) menggunakan pendekatan R&D Model ADDIE.
+[+] Dokumen: Penambahan bagian "Research Gap" (kesenjangan penelitian) dan "Penelitian yang Relevan".
+[+] Dokumen: Ekstraksi dan pemetaan implementasi 7 dari 12 Prinsip Pembelajaran Multimedia Richard E. Mayer ke dalam desain MPI "Yummy English" (Multimedia, Kesinambungan Spasial, Kesinambungan Temporal, Segmentasi, Koherensi, Modalitas, Personalisasi).
+[+] Dokumen: Penyusunan ulang seluruh isi proposal berdasarkan referensi slide PDF dari kelompok menjadi format dokumen utuh (Markdown/Docs) siap cetak.
+
+================================================================================
+
+FASE 5: DEBUGGING, PENYEMPURNAAN UI & OPTIMASI MOBILE (VERSI FINAL)
+
+================================================================================
+
+[Tanggal: 3 November 2026]
+[-] Bug Fix (Layar Terpotong di Mobile): Tampilan web terpotong oleh address bar browser di beberapa HP modern (aspect ratio rusak).
+    > Solusi: Mengganti height: 100vh menjadi 100dvh (Dynamic Viewport Height). Menerapkan aspect-ratio: 16/9 yang dikunci menggunakan fungsi min() pada lebar (vw) dan tinggi (dvh) kontainer, memastikan ukuran selalu proporsional dan tidak ada sisi yang keluar dari layar.
+[-] Bug Fix (Modal Auto-Show): Pop-up notifikasi "Good Job" tiba-tiba muncul menutupi layar saat aplikasi baru pertama kali dibuka.
+    > Solusi: Menghapus class "flex" dari div modal-overlay bawaan Tailwind agar display default kembali menjadi "none" dan hanya muncul jika dipanggil oleh JavaScript saat jawaban benar.
+[-] Bug Fix (Tombol Ujian Overlap di Layar Pendek): Tombol navigasi (Uji Listening, Speaking, Writing) melayang (absolute) dan menabrak/menutupi buku menu di bagian bawah layar HP yang pendek.
+    > Solusi: Merombak struktur CSS layout pada bagian Menu Restoran menjadi Flexbox Column sejati. 
+      1. Menghapus properti absolute positioning pada tombol.
+      2. Meletakkan tombol di dalam div flex-shrink-0 (berperan sebagai footer statis di bawah).
+      3. Menambahkan properti flex-grow min-h-0 pada buku menu agar buku otomatis mengecil mengikuti sisa ruang (margin) yang ada tanpa menabrak tombol di bawahnya.
+      4. Memperkecil padding internal menu-item agar gambar tidak melebar ekstrem di layar kecil.
+
+Status Proyek Saat Ini: SELESAI & STABIL (Versi Web-Based App Responsif 16:9)
+
+================================================================================
+
+LOGBOOK PENGEMBANGAN
+Proyek: Yummy English: Food & Drinks
+Periode riwayat yang tercatat: 10 November 2026
+
+
+1. MEMBUAT PROTOTIPE HALAMAN AWAL
+   Commit: 8e91e0d (index)
+   - Membuat halaman awal Yummy English sebagai aplikasi belajar kosakata
+     bahasa Inggris dengan tema makanan dan minuman.
+   - Menyiapkan tampilan game dengan area konten berasio 16:9, gaya visual
+     ramah anak, tombol, modal, dan rancangan agar dapat digunakan di layar
+     ponsel maupun komputer.
+   - Menambahkan konten pengenalan/panduan, identitas pengembang, tujuan
+     pembelajaran, serta navigasi awal.
+
+2. MERAPIKAN STRUKTUR APLIKASI DAN MENAMBAHKAN ASET HOMEPAGE
+   Commit: f564f42 (asset homepage)
+   - Memisahkan CSS dari halaman utama ke css/style.css dan logika JavaScript
+     ke js/app.js agar struktur lebih mudah dirawat.
+   - Membagi materi menjadi halaman terpisah: beranda, menu, listening,
+     speaking, dan writing.
+   - Menambahkan aset visual beranda seperti latar, logo, panduan,
+     identitas pengembang, dan ilustrasi tombol.
+   - Mengganti pengaturan viewport agar zoom standar perangkat tidak
+     dikunci.
+   - Menyiapkan data kosakata serta fungsi dasar navigasi, modal, suara,
+     dan kuis yang digunakan lintas halaman.
+
+3. MENAMBAHKAN HALAMAN MENU DAN MENYESUAIKAN TAMPILAN RESPONSIF
+   Commit: 9ebb776 (page menu)
+   - Menambahkan latar khusus menu dan menyempurnakan styling/layout
+     halaman-halaman aplikasi.
+   - Mengatur navigasi dari beranda ke menu dan kembali, serta memperbarui
+     tautan antarhalaman supaya sesuai dengan struktur folder pages.
+   - Menyediakan menu kosakata dalam dua halaman dengan kontrol paginator
+     untuk berpindah halaman.
+   - Mengubah paginator menjadi elemen button dengan label aksesibilitas.
+   - Menambahkan pesan orientasi yang meminta pengguna memutar ponsel ke
+     posisi landscape agar tampilan rasio 16:9 dapat digunakan.
+   - Memberi jarak pada logo/judul beranda agar tata letaknya lebih baik.
+
+4. REVISI POSISI KONTROL MENU
+   Commit: a3e9074 (page menu)
+   - Mengoreksi posisi tombol paginator menu dari bagian atas yang terlalu
+     tinggi ke posisi yang terlihat dan dapat dijangkau di dalam halaman.
+
+5. MENAMBAHKAN HALAMAN SERTIFIKAT DAN TEMPLATE
+   Commit: 04b8bbc (test)
+   - Menambahkan halaman certificate.html dan aset template sertifikat.
+   - Menyiapkan pratinjau sertifikat sebagai keluaran setelah siswa
+     menyelesaikan kegiatan belajar.
+
+6. MENGGANTI EMOJI MENJADI GAMBAR KOSAKATA DAN MELENGKAPI ASET MENU
+   Commit: 757ab87 (updated asset img menu)
+   - Menambahkan kumpulan gambar makanan dan minuman untuk kosakata menu.
+   - Membuat fungsi pemetaan kosakata ke lokasi gambar, termasuk encoding
+     nama berkas yang mengandung spasi.
+   - Mengganti pilihan gambar pada soal listening dari emoji menjadi gambar
+     kosakata.
+   - Mengganti gambar target pada soal speaking dan writing dari emoji
+     menjadi gambar yang sesuai dengan soal, serta mengisi teks alternatif
+     gambar.
+   - Merevisi tampilan menu agar memakai aset gambar baru.
+   - Menghubungkan pratinjau sertifikat dengan nama siswa, jumlah skor dari
+     listening/speaking/writing, dan tanggal berformat Indonesia. Tombol
+     cetak menggunakan fitur cetak browser yang dapat dipakai untuk
+     menyimpan sebagai PDF.
+   - Catatan status: pada implementasi saat ini, tombol Sertifikat di menu
+     menampilkan ringkasan skor melalui alert; tombol tersebut belum
+     mengarahkan pengguna ke halaman certificate.html.
+
+7. MEMPERBAIKI GAMBAR MINUMAN COKELAT YANG TIDAK SESUAI
+   Commit: 2a5ab72 (bug img)
+   - Menambahkan aset chocolate milk.png.
+   - Memperbaiki pemetaan gambar untuk kosakata "chocolate drink". Sebelumnya
+     pemetaan memakai gambar "iced milk", sehingga gambar yang ditampilkan
+     tidak cocok dengan nama minuman.
+   - Memperbaiki juga sumber gambar pada kartu menu agar "chocolate drink"
+     memakai chocolate milk.png, sementara "iced milk" tetap memakai
+     iced milk.png.
+
+RINGKASAN FITUR APLIKASI SAAT INI
+- Materi kosakata mencakup 24 makanan dan minuman yang dikelompokkan sebagai
+  appetizer, main, side, dessert, dan beverage.
+- Menu kosakata ditampilkan dengan gambar, terjemahan bahasa Indonesia,
+  dan kontrol untuk mendengarkan pengucapan bahasa Inggris.
+- Tersedia tiga jenis latihan: listening, speaking, dan writing. Setiap
+  latihan mengambil 10 soal acak dari daftar kosakata.
+- Listening menggunakan audio Text-to-Speech berbahasa Inggris dan pilihan
+  gambar.
+- Speaking menggunakan pengenalan suara browser jika didukung; aplikasi
+  memberi pemberitahuan jika fitur tersebut tidak tersedia.
+- Writing menyediakan input jawaban dan word bank, memeriksa ejaan, serta
+  memberi umpan balik.
+- Skor dan posisi kuis disimpan di sessionStorage selama sesi browser.
+- Halaman sertifikat menyediakan isian nama, pratinjau skor total dan
+  tanggal, serta tombol cetak/simpan PDF dari browser.
+- Tampilan permainan dirancang dengan orientasi landscape dan rasio 16:9.

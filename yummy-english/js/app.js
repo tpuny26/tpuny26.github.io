@@ -46,6 +46,26 @@
     }
 
     // --- Navigation & Modals ---
+    function navigateTo(url) {
+        const destination = new URL(url, window.location.href);
+        const gameContainer = document.getElementById('game-container');
+
+        if (document.fullscreenElement === gameContainer) {
+            let pageFrame = gameContainer.querySelector('.fullscreen-page-frame');
+            if (!pageFrame) {
+                pageFrame = document.createElement('iframe');
+                pageFrame.className = 'fullscreen-page-frame';
+                pageFrame.title = 'Halaman permainan';
+                pageFrame.allowFullscreen = true;
+                gameContainer.appendChild(pageFrame);
+            }
+            pageFrame.src = destination.href;
+            return;
+        }
+
+        window.location.href = destination.href;
+    }
+
     function goToScreen(screenId) {
         if(recognition && isRecording) { recognition.stop(); }
 
@@ -54,7 +74,7 @@
             'screen-menu': currentPage === 'home' ? 'pages/menu.html' : 'menu.html'
         };
         if (destinations[screenId]) {
-            window.location.href = new URL(destinations[screenId], window.location.href).href;
+            navigateTo(destinations[screenId]);
         }
     }
 
@@ -65,6 +85,84 @@
     function closeModals() {
         document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
     }
+
+    function getFullscreenDocument() {
+        if (window.top === window) return document;
+
+        try {
+            const topDocument = window.top.document;
+            return topDocument.getElementById('game-container') ? topDocument : document;
+        } catch {
+            return document;
+        }
+    }
+
+    function ensureFullscreenButton() {
+        if (document.querySelector('.fullscreen-button')) return;
+
+        const gameContainer = document.getElementById('game-container');
+        if (!gameContainer) return;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'fullscreen-button fullscreen-button-page';
+        button.setAttribute('onclick', 'toggleFullscreen()');
+        button.setAttribute('aria-label', 'Aktifkan fullscreen');
+        button.title = 'Aktifkan fullscreen';
+
+        const image = document.createElement('img');
+        image.src = '../assets/images/fullscreen.png';
+        image.alt = '';
+        button.appendChild(image);
+
+        const pageToolbar = gameContainer.querySelector('.certificate-toolbar')
+            || gameContainer.querySelector('.screen.active > .flex.justify-between.items-center');
+        if (pageToolbar) {
+            button.classList.add('fullscreen-button-inline');
+            pageToolbar.appendChild(button);
+        } else {
+            gameContainer.appendChild(button);
+        }
+    }
+
+    async function toggleFullscreen() {
+        const fullscreenDocument = getFullscreenDocument();
+        const gameContainer = fullscreenDocument.getElementById('game-container')
+            || document.getElementById('game-container');
+
+        try {
+            if (fullscreenDocument.fullscreenElement) {
+                await fullscreenDocument.exitFullscreen();
+                return;
+            }
+
+            if (!gameContainer?.requestFullscreen) {
+                alert('Browser tidak mendukung mode fullscreen.');
+                return;
+            }
+
+            await gameContainer.requestFullscreen();
+        } catch (error) {
+            console.error('Gagal mengubah mode fullscreen:', error);
+            alert('Mode fullscreen tidak dapat diubah di browser ini.');
+        }
+    }
+
+    function updateFullscreenButton() {
+        const button = document.querySelector('.fullscreen-button');
+        if (!button) return;
+
+        const fullscreenDocument = getFullscreenDocument();
+        const label = fullscreenDocument.fullscreenElement
+            ? 'Keluar dari fullscreen'
+            : 'Aktifkan fullscreen';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+    }
+
+    getFullscreenDocument().addEventListener('fullscreenchange', updateFullscreenButton);
+    ensureFullscreenButton();
+    updateFullscreenButton();
 
     function toggleMenuPage() {
         const p1 = document.getElementById('menu-page-1');
@@ -133,7 +231,7 @@
         // Generate 10 random questions from vocabulary
         currentQuiz = shuffle([...vocabulary]).slice(0, maxQuestions);
         saveState();
-        window.location.href = new URL(`${type}.html`, window.location.href).href;
+        navigateTo(`${type}.html`);
     }
 
     // --- UJI LISTENING ---
