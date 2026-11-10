@@ -14,8 +14,10 @@ body {
 /* 16:9 Aspect Ratio Container */
 #game-container {
     aspect-ratio: 16 / 9;
-    width: min(100vw, 100dvh * (16 / 9));
-    height: min(100dvh, 100vw * (9 / 16));
+    width: min(100vw, 177.7778vh);
+    width: min(100vw, 177.7778dvh);
+    height: min(100vh, 56.25vw);
+    height: min(100dvh, 56.25vw);
     background-color: #fdf3e7;
     background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #fdf3e7 100%);
     position: relative;
@@ -44,6 +46,10 @@ body {
 
 #screen-home {
     background: #38bdf8 url("../assets/images/background.png") center / cover no-repeat;
+}
+
+#screen-menu {
+    background: #ffedd5 url("../assets/images/menu-background.png") center / cover no-repeat;
 }
 
 #screen-home > .home-content {
@@ -126,6 +132,173 @@ body {
     display: flex;
     flex-direction: column;
     border: 1px solid #e0d5c1;
+}
+
+/* Place menu content over the illustrated pages in menu-background.png */
+#screen-menu > .book-container {
+    position: absolute;
+    inset: 20% 7% 10%;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+
+#screen-menu > .flex.justify-between {
+    position: absolute;
+    top: 2%;
+    left: 2%;
+    right: 2%;
+    margin: 0;
+}
+
+#screen-menu > .flex.justify-between > div:nth-child(2) {
+    display: none;
+}
+
+#screen-menu > .book-container > #menu-page-1:not(.hidden),
+#screen-menu > .book-container > #menu-page-2:not(.hidden) {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    gap: 2%;
+}
+
+#screen-menu .book-page {
+    min-width: 0;
+    margin: 0;
+    padding: 0% 7% 10% 8%;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#screen-menu .book-page > .grid {
+    min-height: 0;
+    grid-auto-rows: minmax(0, 1fr);
+}
+
+#screen-menu .book-page > .grid.grid-cols-3 {
+    flex: 1;
+}
+
+.menu-page-switch {
+    position: absolute;
+    top: -8%;
+    right: 3%;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: clamp(2.2rem, 5vh, 2.8rem);
+    padding: 0.35rem clamp(0.8rem, 1.5vw, 1.15rem);
+    border: 2px solid #fff;
+    border-radius: 9999px;
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 4px 0 #1e3a8a, 0 7px 12px rgba(0, 0, 0, 0.28);
+    font: inherit;
+    font-size: clamp(0.75rem, 1vw, 1rem);
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.menu-page-switch:hover {
+    transform: translateY(-2px);
+    background: #1d4ed8;
+    box-shadow: 0 6px 0 #1e3a8a, 0 9px 14px rgba(0, 0, 0, 0.3);
+}
+
+.menu-page-switch:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #1e3a8a, 0 3px 6px rgba(0, 0, 0, 0.24);
+}
+
+.menu-page-switch:focus-visible {
+    outline: 3px solid #facc15;
+    outline-offset: 3px;
+}
+
+#screen-menu > .book-container > #menu-page-1:not(.hidden) {
+    animation: menuPageEnterFromLeft 360ms ease-out both;
+}
+
+#screen-menu > .book-container > #menu-page-2:not(.hidden) {
+    animation: menuPageEnterFromRight 360ms ease-out both;
+}
+
+@keyframes menuPageEnterFromLeft {
+    from { opacity: 0; transform: perspective(1200px) rotateY(7deg) translateX(-1rem); }
+    to { opacity: 1; transform: perspective(1200px) rotateY(0) translateX(0); }
+}
+
+@keyframes menuPageEnterFromRight {
+    from { opacity: 0; transform: perspective(1200px) rotateY(-7deg) translateX(1rem); }
+    to { opacity: 1; transform: perspective(1200px) rotateY(0) translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-page-switch,
+    #screen-menu > .book-container > #menu-page-1:not(.hidden),
+    #screen-menu > .book-container > #menu-page-2:not(.hidden) {
+        animation: none;
+        transition: none;
+    }
+}
+
+#screen-menu .book-page > div.rounded-full {
+    flex-shrink: 0;
+    padding: 0.2rem clamp(0.35rem, 1vw, 0.85rem);
+    margin-bottom: clamp(0.2rem, 0.7vh, 0.6rem);
+    font-size: clamp(0.65rem, 0.9vw, 0.95rem);
+}
+
+#screen-menu .menu-item {
+    min-height: 0;
+    padding: clamp(0.15rem, 0.5vw, 0.45rem);
+    border: 1px solid rgba(142, 78, 28, 0.28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.58);
+    box-shadow: 0 2px 5px rgba(104, 55, 20, 0.12);
+}
+
+#screen-menu .menu-item > div:first-child {
+    margin-bottom: 0.1rem;
+    font-size: clamp(1.2rem, 3.4vh, 2.6rem);
+    line-height: 1;
+}
+
+#screen-menu .menu-item > div:nth-child(2) {
+    font-size: clamp(0.6rem, 0.85vw, 0.9rem);
+}
+
+#screen-menu .menu-item > div:nth-child(3) {
+    font-size: clamp(0.55rem, 0.72vw, 0.75rem);
+}
+
+#screen-menu .speaker-icon {
+    right: 3%;
+    bottom: 3%;
+    width: clamp(1.15rem, 2.1vw, 1.6rem);
+    height: clamp(1.15rem, 2.1vw, 1.6rem);
+    font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+}
+
+#screen-menu > .w-full.flex.justify-center {
+    position: absolute;
+    bottom: 1.5%;
+    left: 0;
+    right: 0;
+}
+
+#screen-menu .book-spine {
+    display: none;
 }
 
 /* Binder rings middle */
@@ -234,158 +407,61 @@ body {
 ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
-/* Portrait phones and tablets */
-@media (orientation: portrait) {
-    body {
-        align-items: stretch;
-        overflow: hidden;
+#orientation-warning {
+    display: none;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+    body > #game-container,
+    body > .modal-overlay {
+        display: none !important;
     }
 
-    #game-container {
-        aspect-ratio: auto;
-        width: 100vw;
-        height: 100dvh;
-        border-radius: 0;
-        box-shadow: none;
-    }
-
-    .screen {
-        overflow-y: auto;
-        overscroll-behavior: contain;
-    }
-
-    #screen-home > .home-content {
-        min-height: 100%;
-        height: auto;
-        justify-content: space-around;
-        gap: 1.5rem;
-        padding-top: 1.5rem;
-        padding-bottom: 1.5rem;
-    }
-
-    #screen-home .home-logo {
-        width: min(90%, 40rem);
-        max-height: 30vh;
-    }
-
-    #screen-home .grid.grid-cols-4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: min(100%, 28rem);
-        height: auto;
+    #orientation-warning {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         gap: 1rem;
-        padding-bottom: 0.75rem;
+        padding: 2rem;
+        background: #fff7ed;
+        color: #7c2d12;
+        text-align: center;
     }
 
-    #screen-home .grid.grid-cols-4 > button {
-        min-height: 10.5rem;
+    #orientation-warning i {
+        font-size: 4rem;
+        color: #f97316;
     }
 
-    #screen-menu {
-        overflow-y: auto;
-    }
-
-    #screen-menu .book-container {
-        flex: none;
-        min-height: 0;
-        overflow: visible;
-    }
-
-    #menu-page-1,
-    #menu-page-2 {
-        flex-direction: column;
-        height: auto;
-    }
-
-    #menu-page-1 .book-page,
-    #menu-page-2 .book-page {
-        flex: none;
-        min-height: min(45dvh, 24rem);
-        margin: 5px 0;
-    }
-
-    .book-spine {
-        display: none;
-    }
-
-    .menu-item {
-        min-height: 5rem;
-    }
-
-    #screen-menu > .w-full.flex.justify-center {
-        flex-wrap: wrap;
-        padding: 0.5rem 0 0.75rem;
-    }
-
-    #screen-listening,
-    #screen-speaking,
-    #screen-writing {
-        padding: 0.75rem;
-    }
-
-    #screen-listening > .flex.gap-4.flex-grow,
-    #screen-speaking > .flex.gap-4.flex-grow,
-    #screen-writing > .flex.gap-4.flex-grow {
-        flex-direction: column;
-        overflow: visible;
-        flex: none;
-    }
-
-    #screen-listening > .flex.gap-4.flex-grow > .petunjuk-panel,
-    #screen-speaking > .flex.gap-4.flex-grow > .petunjuk-panel,
-    #screen-writing > .flex.gap-4.flex-grow > .petunjuk-panel {
-        width: 100%;
-        height: auto;
-    }
-
-    #screen-listening > .flex.gap-4.flex-grow > .w-3\/4,
-    #screen-speaking > .flex.gap-4.flex-grow > .w-3\/4,
-    #screen-writing > .flex.gap-4.flex-grow > .w-3\/4,
-    #screen-writing > .flex.gap-4.flex-grow > .w-2\/4,
-    #screen-writing > .flex.gap-4.flex-grow > .w-1\/4 {
-        width: 100%;
-        min-height: 60dvh;
-    }
-
-    #screen-listening #listening-options {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        min-height: 15rem;
-    }
-
-    #screen-speaking > .flex.gap-4.flex-grow > .w-3\/4 {
-        flex-direction: column;
-    }
-
-    #screen-speaking > .flex.gap-4.flex-grow > .w-3\/4 > .w-1\/2 {
-        width: 100%;
-        min-height: 40dvh;
-    }
-
-    #screen-writing > .flex.gap-4.flex-grow > .w-1\/4:last-child > .absolute {
-        position: static;
-        align-self: flex-end;
-        margin-top: 1rem;
-    }
-
-    .modal-content {
-        max-width: calc(100% - 1.5rem);
-        max-height: calc(100% - 1.5rem);
-        padding: 1rem;
-        border-width: 4px;
-    }
-
-    .modal-content .grid.grid-cols-2,
-    .modal-content .grid.grid-cols-3 {
-        grid-template-columns: 1fr;
+    #orientation-warning p {
+        max-width: 22rem;
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
     }
 }
 
-@media (orientation: portrait) and (min-width: 600px) {
-    #screen-home .grid.grid-cols-4 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        max-width: 48rem;
+@media (orientation: landscape) and (max-height: 520px) {
+    #screen-menu > .book-container {
+        inset: 18% 7% 9%;
     }
 
-    .modal-content .grid.grid-cols-3 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    #screen-menu .book-page {
+        padding-top: 0%;
+        padding-bottom: 10%;
+    }
+
+    #screen-menu .menu-item > div:first-child {
+        font-size: clamp(1rem, 3.2vh, 1.65rem);
+    }
+
+    #screen-menu > .w-full.flex.justify-center button {
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+        font-size: 0.7rem;
     }
 }
