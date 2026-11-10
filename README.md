@@ -1,2 +1,2 @@
-# infor126.github.io
+# tpuny26.github.io
 infor
