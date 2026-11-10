@@ -268,10 +268,12 @@ body {
     box-shadow: 0 2px 5px rgba(104, 55, 20, 0.12);
 }
 
-#screen-menu .menu-item > div:first-child {
+#screen-menu .menu-item-image {
+    display: block;
+    width: 100%;
+    height: clamp(2rem, 7vh, 4.5rem);
+    object-fit: contain;
     margin-bottom: 0.1rem;
-    font-size: clamp(1.2rem, 3.4vh, 2.6rem);
-    line-height: 1;
 }
 
 #screen-menu .menu-item > div:nth-child(2) {
@@ -407,6 +409,272 @@ body {
 ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
+/* Certificate Page */
+body[data-page="certificate"] {
+    overflow: auto;
+}
+
+body[data-page="certificate"] #game-container {
+    display: flex !important;
+    width: min(100vw, 177.7778vh);
+    max-width: 100%;
+    height: auto;
+    min-height: 100dvh;
+    aspect-ratio: auto;
+    border-radius: 0;
+}
+
+.certificate-page {
+    background: linear-gradient(180deg, #fffaf3 0%, #fbe9d1 100%);
+    padding: clamp(0.75rem, 2vw, 1.25rem);
+    gap: clamp(0.75rem, 2vw, 1rem);
+}
+
+.certificate-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 2px solid rgba(247, 175, 80, 0.8);
+    box-shadow: 0 12px 30px rgba(124, 60, 17, 0.12);
+    backdrop-filter: blur(4px);
+}
+
+.certificate-back,
+.certificate-print {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: none;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.certificate-back {
+    background: #fffdf9;
+    color: #7c3d1f;
+    box-shadow: 0 8px 18px rgba(94, 53, 22, 0.12);
+}
+
+.certificate-back:hover,
+.certificate-print:hover {
+    transform: translateY(-1px);
+}
+
+.certificate-back:active,
+.certificate-print:active {
+    transform: translateY(1px);
+}
+
+.certificate-name-field {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 0;
+    color: #5b3315;
+    font-weight: 700;
+}
+
+.certificate-name-field span {
+    white-space: nowrap;
+    font-size: clamp(0.8rem, 1vw, 1rem);
+}
+
+.certificate-name-field input {
+    width: 100%;
+    min-width: 0;
+    border: 2px solid rgba(162, 97, 42, 0.35);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #5b3315;
+    padding: 0.72rem 0.9rem;
+    font: inherit;
+    font-size: clamp(0.9rem, 1.15vw, 1.05rem);
+    box-shadow: inset 0 1px 4px rgba(50, 28, 9, 0.04);
+}
+
+.certificate-name-field input:focus {
+    outline: 3px solid rgba(59, 130, 246, 0.28);
+    border-color: rgba(59, 130, 246, 0.7);
+}
+
+.certificate-print {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(245, 158, 11, 0.28);
+}
+
+.certificate-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 0.2rem 0 0.4rem;
+}
+
+.certificate-canvas {
+    position: relative;
+    width: min(100%, 1100px);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 22px;
+    border: 4px solid rgba(237, 188, 108, 0.9);
+    background: #fffaf2;
+    box-shadow: 0 18px 40px rgba(80, 43, 18, 0.18);
+}
+
+.certificate-canvas > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+    pointer-events: none;
+}
+
+.certificate-student-name,
+.certificate-final-score,
+.certificate-date {
+    position: absolute;
+    display: block;
+    text-align: center;
+    color: #5d3416;
+    font-weight: 800;
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
+}
+
+.certificate-student-name {
+    left: 50%;
+    top: 49%;
+    width: 58%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(1.4rem, 3vw, 3rem);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    text-transform: capitalize;
+}
+
+.certificate-final-score {
+    left: 68%;
+    top: 58%;
+    width: auto;
+    min-width: 4rem;
+    transform: translate(-50%, -50%);
+    font-size: clamp(1.2rem, 2vw, 2.4rem);
+}
+
+.certificate-date {
+    left: 60%;
+    bottom: 16%;
+    width: 45%;
+    transform: translateX(-50%);
+    font-size: clamp(0.8rem, 1.3vw, 1.3rem);
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 760px) {
+    .certificate-page {
+        padding: 0.65rem;
+    }
+
+    .certificate-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .certificate-back,
+    .certificate-print {
+        width: 100%;
+    }
+
+    .certificate-name-field {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .certificate-name-field span {
+        text-align: center;
+    }
+
+    .certificate-canvas {
+        width: min(100%, 720px);
+        border-radius: 16px;
+    }
+
+    .certificate-student-name {
+        top: 49%;
+        width: 64%;
+        font-size: clamp(1.1rem, 5vw, 2.3rem);
+    }
+
+    .certificate-final-score {
+        left: 70%;
+        top: 58%;
+        font-size: clamp(1rem, 4vw, 1.8rem);
+    }
+
+    .certificate-date {
+        left: 58%;
+        bottom: 17%;
+        width: 50%;
+        font-size: clamp(0.72rem, 2.5vw, 1rem);
+    }
+}
+
+body[data-page="certificate"] #orientation-warning {
+    display: none !important;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+    body[data-page="certificate"] > #game-container,
+    body[data-page="certificate"] > .modal-overlay {
+        display: flex !important;
+    }
+}
+
+@media print {
+    body {
+        background: #fff;
+        overflow: visible;
+    }
+
+    #game-container {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .certificate-toolbar {
+        display: none;
+    }
+
+    .certificate-stage {
+        padding: 0;
+    }
+
+    .certificate-canvas {
+        width: 100%;
+        max-height: none;
+        aspect-ratio: 16 / 9;
+        border: none;
+        box-shadow: none;
+    }
+}
+
 #orientation-warning {
     display: none;
 }
@@ -455,8 +723,8 @@ body {
         padding-bottom: 10%;
     }
 
-    #screen-menu .menu-item > div:first-child {
-        font-size: clamp(1rem, 3.2vh, 1.65rem);
+    #screen-menu .menu-item-image {
+        height: clamp(1.7rem, 6vh, 3rem);
     }
 
     #screen-menu > .w-full.flex.justify-center button {

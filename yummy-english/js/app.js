@@ -26,6 +26,11 @@
         { id: 'hot_tea', en: 'hot tea', emoji: '☕', type: 'beverage' }
     ];
 
+    function menuImagePath(item) {
+        const imageName = item.en === 'chocolate drink' ? 'iced milk' : item.en;
+        return `../assets/images/menu/${encodeURIComponent(imageName)}.png`;
+    }
+
     // --- State Management ---
     const stateKey = 'yummy-english-state';
     const savedState = JSON.parse(sessionStorage.getItem(stateKey) || '{}');
@@ -155,7 +160,7 @@
             btn.onclick = () => checkListening(opt.id, currentTarget.id, btn);
             btn.innerHTML = `
                 <div class="self-start bg-red-400 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow mb-1">${labels[idx]}</div>
-                <div class="text-5xl mb-2">${opt.emoji}</div>
+                <img src="${menuImagePath(opt)}" alt="${opt.en}" class="w-24 h-20 object-contain mb-2">
                 <div class="bg-pink-100 w-full text-center rounded text-sm font-bold text-gray-700 py-1">${opt.en}</div>
             `;
             container.appendChild(btn);
@@ -261,7 +266,9 @@
         document.getElementById('speak-q-num').innerText = `${currentQuestionIndex + 1}/${maxQuestions}`;
         currentTarget = currentQuiz[currentQuestionIndex];
         
-        document.getElementById('speak-target-emoji').innerText = currentTarget.emoji;
+        const targetImage = document.getElementById('speak-target-image');
+        targetImage.src = menuImagePath(currentTarget);
+        targetImage.alt = currentTarget.en;
         document.getElementById('speak-target-text').innerText = currentTarget.en;
         
         document.getElementById('record-result').innerText = "";
@@ -294,7 +301,9 @@
         document.getElementById('write-q-num').innerText = `${currentQuestionIndex + 1}/${maxQuestions}`;
         currentTarget = currentQuiz[currentQuestionIndex];
         
-        document.getElementById('write-target-emoji').innerText = currentTarget.emoji;
+        const targetImage = document.getElementById('write-target-image');
+        targetImage.src = menuImagePath(currentTarget);
+        targetImage.alt = currentTarget.en;
         const inputEl = document.getElementById('write-input');
         inputEl.value = '';
         inputEl.disabled = false;
@@ -368,6 +377,30 @@ Writing: ${scores.writing}
 (Fitur download PDF sertifikat akan tersedia nanti)`);
     }
 
+    function initCertificate() {
+        const nameInput = document.getElementById('certificate-name');
+        const namePreview = document.getElementById('certificate-student-name');
+        const scorePreview = document.getElementById('certificate-final-score');
+        const datePreview = document.getElementById('certificate-date');
+
+        if (!nameInput || !namePreview || !scorePreview || !datePreview) return;
+
+        const updateCertificate = () => {
+            const studentName = nameInput.value.trim() || 'Nama Siswa';
+            const totalScore = Number(scores.listening || 0) + Number(scores.speaking || 0) + Number(scores.writing || 0);
+            namePreview.textContent = studentName;
+            scorePreview.textContent = String(totalScore);
+            datePreview.textContent = new Intl.DateTimeFormat('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }).format(new Date());
+        };
+
+        nameInput.addEventListener('input', updateCertificate);
+        updateCertificate();
+    }
+
     function initializePage() {
         if (currentPage === 'menu') {
             if (scores.listening > 0 || scores.speaking > 0 || scores.writing > 0) {
@@ -375,6 +408,11 @@ Writing: ${scores.writing}
                 certificateButton.classList.remove('hidden');
                 certificateButton.onclick = showCertificateScores;
             }
+            return;
+        }
+
+        if (currentPage === 'certificate') {
+            initCertificate();
             return;
         }
 
