@@ -1,2 +1,2 @@
 # tpuny26.github.io
-infor
+Kumpulan Karya MPI TP UNY
