@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yummy English: Food & Drinks</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Baloo 2 for a playful, rounded look -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Baloo 2"', 'cursive', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#ff4d4d',
+                            orange: '#ff9f1c',
+                            yellow: '#ffbf69',
+                            blue: '#2ec4b6',
+                            green: '#2ecc71',
+                            pink: '#ff9ff3',
+                            bg: '#fdf3e7', // Light warm background
+                        }
+                    },
+                    boxShadow: {
+                        'btn': '0 6px 0 rgba(0, 0, 0, 0.15)',
+                        'btn-active': '0 2px 0 rgba(0, 0, 0, 0.15)',
+                        'card': '0 8px 15px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+</head>
+<body data-page="menu">
+<div id="game-container">
+    <!-- ================= SCREEN 2: MENU RESTORAN ================= -->
+    <div id="screen-menu" class="screen active bg-orange-100 p-2 flex-col">
+        <!-- Top Bar -->
+        <div class="flex justify-between items-center mb-1 z-10 flex-shrink-0">
+            <button onclick="goToScreen('screen-home')" class="btn-3d bg-white text-blue-600 font-bold py-1 px-4 border-2 border-blue-200 rounded-full shadow flex items-center gap-2">
+                <i class="fas fa-home"></i> Kembali
+            </button>
+            <div class="flex flex-col items-center bg-white px-6 py-1 rounded-full border-4 border-orange-300 shadow-md relative mt-1">
+                <div class="absolute -top-5 bg-white w-10 h-10 rounded-full flex items-center justify-center border-4 border-orange-300">
+                    <i class="fas fa-hat-chef text-xl text-gray-700"></i><span class="text-xl">🧑‍🍳</span>
+                </div>
+                <span class="text-[10px] font-bold text-gray-500">Menu Restoran</span>
+                <span class="text-lg font-bold text-orange-700 leading-tight">Nafisya</span>
+            </div>
+            <div class="w-24">
+                <button id="btn-sertifikat" onclick="alert('Selesaikan semua kuis dulu ya!')" class="hidden btn-3d bg-green-500 text-white font-bold py-1 px-3 border-2 border-green-700 rounded-full shadow text-sm flex items-center gap-1">
+                    <i class="fas fa-award text-yellow-300"></i> Sertifikat
+                </button>
+            </div>
+        </div>
+
+        <!-- Book Layout (Diatur agar otomatis mengisi ruang kosong tanpa menabrak) -->
+        <div class="book-container shadow-2xl mx-auto w-full max-w-5xl flex-grow min-h-0 mb-2">
+            <!-- Spine Elements -->
+            <div class="book-spine">
+                <div class="binder-ring"></div><div class="binder-ring"></div><div class="binder-ring"></div><div class="binder-ring"></div>
+            </div>
+
+            <!-- MENU PAGE 1 -->
+            <div id="menu-page-1" class="flex w-full">
+                <!-- Left Page: Appetizer & Main Course (Part 1) -->
+                <div class="book-page">
+                    <div class="bg-red-400 text-white font-bold rounded-full py-1 px-4 mb-2 shadow w-max mx-auto text-sm">
+                        <i class="fas fa-bowl-food mr-2"></i> Appetizer
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <div class="menu-item"><div class="text-4xl mb-1">🌯</div><div class="font-bold text-[10px] leading-tight">spring roll</div><div class="text-[9px] text-gray-500">(lumpia)</div><div class="speaker-icon" onclick="speak('spring roll')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🥗</div><div class="font-bold text-[10px] leading-tight">vegetable salad</div><div class="text-[9px] text-gray-500">(salad sayur)</div><div class="speaker-icon" onclick="speak('vegetable salad')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🟨</div><div class="font-bold text-[10px] leading-tight">fried tofu</div><div class="text-[9px] text-gray-500">(tahu goreng)</div><div class="speaker-icon" onclick="speak('fried tofu')"><i class="fas fa-volume-up"></i></div></div>
+                    </div>
+
+                    <div class="bg-orange-400 text-white font-bold rounded-full py-1 px-4 mb-2 shadow w-max mx-auto text-sm">
+                        <i class="fas fa-bell-concierge mr-2"></i> Main Course
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 flex-grow">
+                        <div class="menu-item"><div class="text-4xl mb-1">🍛</div><div class="font-bold text-[10px] leading-tight">fried rice</div><div class="text-[9px] text-gray-500">(nasi goreng)</div><div class="speaker-icon" onclick="speak('fried rice')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍗</div><div class="font-bold text-[10px] leading-tight">grilled chicken</div><div class="text-[9px] text-gray-500">(ayam bakar)</div><div class="speaker-icon" onclick="speak('grilled chicken')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍲</div><div class="font-bold text-[10px] leading-tight">meatball soup</div><div class="text-[9px] text-gray-500">(bakso)</div><div class="speaker-icon" onclick="speak('meatball soup')"><i class="fas fa-volume-up"></i></div></div>
+                    </div>
+                </div>
+
+                <!-- Right Page: Main Course (Part 2) -->
+                <div class="book-page">
+                    <div class="bg-orange-400 text-white font-bold rounded-full py-1 px-4 mb-2 shadow w-max mx-auto text-sm opacity-0">Spacer</div> <!-- Just to align -->
+                    <div class="grid grid-cols-3 gap-2 grid-rows-2 flex-grow">
+                        <div class="menu-item"><div class="text-4xl mb-1">🍔</div><div class="font-bold text-[10px] leading-tight">burger</div><div class="text-[9px] text-gray-500">(burger)</div><div class="speaker-icon" onclick="speak('burger')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍝</div><div class="font-bold text-[10px] leading-tight">spaghetti bolognese</div><div class="text-[9px] text-gray-500">(spageti)</div><div class="speaker-icon" onclick="speak('spaghetti bolognese')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍜</div><div class="font-bold text-[10px] leading-tight">chicken noodle soup</div><div class="text-[9px] text-gray-500">(sop ayam)</div><div class="speaker-icon" onclick="speak('chicken noodle soup')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍝</div><div class="font-bold text-[10px] leading-tight">fried noodles</div><div class="text-[9px] text-gray-500">(mie goreng)</div><div class="speaker-icon" onclick="speak('fried noodles')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍛</div><div class="font-bold text-[10px] leading-tight">chicken katsu</div><div class="text-[9px] text-gray-500">(katsu ayam)</div><div class="speaker-icon" onclick="speak('chicken katsu')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍢</div><div class="font-bold text-[10px] leading-tight">chicken satay</div><div class="text-[9px] text-gray-500">(sate ayam)</div><div class="speaker-icon" onclick="speak('chicken satay')"><i class="fas fa-volume-up"></i></div></div>
+                    </div>
+                    <!-- Paginator -->
+                    <div class="absolute bottom-2 right-4 flex items-center gap-2 bg-gray-800 text-white rounded-full px-3 py-1 text-xs font-bold shadow cursor-pointer btn-3d" onclick="toggleMenuPage()">
+                        Page 1/2 <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENU PAGE 2 -->
+            <div id="menu-page-2" class="hidden w-full h-full relative">
+                <!-- Left Page: Side Dish & Dessert -->
+                <div class="book-page">
+                     <div class="bg-green-500 text-white font-bold rounded-full py-1 px-4 mb-2 shadow w-max mx-auto text-sm">
+                        <i class="fas fa-leaf mr-2"></i> Side Dish
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <div class="menu-item"><div class="text-4xl mb-1">🍟</div><div class="font-bold text-[10px] leading-tight">french fries</div><div class="text-[9px] text-gray-500">(kentang goreng)</div><div class="speaker-icon" onclick="speak('french fries')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🥖</div><div class="font-bold text-[10px] leading-tight">garlic bread</div><div class="text-[9px] text-gray-500">(roti bawang)</div><div class="speaker-icon" onclick="speak('garlic bread')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🥗</div><div class="font-bold text-[10px] leading-tight">green salad</div><div class="text-[9px] text-gray-500">(salad sayur)</div><div class="speaker-icon" onclick="speak('green salad')"><i class="fas fa-volume-up"></i></div></div>
+                    </div>
+
+                    <div class="bg-pink-500 text-white font-bold rounded-full py-1 px-4 mb-2 shadow w-max mx-auto text-sm">
+                        <i class="fas fa-ice-cream mr-2"></i> Dessert
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="menu-item"><div class="text-4xl mb-1">🍮</div><div class="font-bold text-[10px] leading-tight">chocolate pudding</div><div class="text-[9px] text-gray-500">(puding cokelat)</div><div class="speaker-icon" onclick="speak('chocolate pudding')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍨</div><div class="font-bold text-[10px] leading-tight">ice cream</div><div class="text-[9px] text-gray-500">(es krim)</div><div class="speaker-icon" onclick="speak('ice cream')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍓</div><div class="font-bold text-[10px] leading-tight">fruit salad</div><div class="text-[9px] text-gray-500">(salad buah)</div><div class="speaker-icon" onclick="speak('fruit salad')"><i class="fas fa-volume-up"></i></div></div>
+                    </div>
+                </div>
+
+                <!-- Right Page: Beverage -->
+                <div class="book-page">
+                    <div class="bg-purple-500 text-white font-bold rounded-full py-1 px-4 mb-2 shadow w-max mx-auto text-sm">
+                        <i class="fas fa-mug-hot mr-2"></i> Beverage
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 grid-rows-2">
+                        <div class="menu-item"><div class="text-4xl mb-1">🧋</div><div class="font-bold text-[10px] leading-tight">iced tea</div><div class="text-[9px] text-gray-500">(es teh)</div><div class="speaker-icon" onclick="speak('iced tea')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍊</div><div class="font-bold text-[10px] leading-tight">orange juice</div><div class="text-[9px] text-gray-500">(jus jeruk)</div><div class="speaker-icon" onclick="speak('orange juice')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍓🥛</div><div class="font-bold text-[10px] leading-tight">strawberry milk</div><div class="text-[9px] text-gray-500">(susu stroberi)</div><div class="speaker-icon" onclick="speak('strawberry milk')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🍫☕</div><div class="font-bold text-[10px] leading-tight">chocolate drink</div><div class="text-[9px] text-gray-500">(minuman cokelat)</div><div class="speaker-icon" onclick="speak('chocolate drink')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">🥛</div><div class="font-bold text-[10px] leading-tight">iced milk</div><div class="text-[9px] text-gray-500">(susu dingin)</div><div class="speaker-icon" onclick="speak('iced milk')"><i class="fas fa-volume-up"></i></div></div>
+                        <div class="menu-item"><div class="text-4xl mb-1">☕</div><div class="font-bold text-[10px] leading-tight">hot tea</div><div class="text-[9px] text-gray-500">(teh panas)</div><div class="speaker-icon" onclick="speak('hot tea')"><i class="fas fa-volume-up"></i></div></div>
+                    </div>
+                    
+                    <div class="absolute bottom-2 left-4 flex items-center gap-2 bg-gray-800 text-white rounded-full px-3 py-1 text-xs font-bold shadow cursor-pointer btn-3d" onclick="toggleMenuPage()">
+                        <i class="fas fa-chevron-left"></i> Page 2/2
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Buttons (Dipindah sebagai Footer sejati di dalam aliran flex) -->
+        <div class="w-full flex justify-center gap-2 md:gap-4 z-20 flex-shrink-0 pb-1">
+            <button onclick="startQuiz('listening')" class="btn-3d bg-yellow-400 border-2 border-yellow-600 text-yellow-900 font-bold py-1 md:py-2 px-2 md:px-4 rounded-full shadow-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+                <i class="fas fa-headphones text-blue-600 md:text-xl"></i> Uji Listening <i class="fas fa-chevron-right"></i>
+            </button>
+            <button onclick="startQuiz('speaking')" class="btn-3d bg-pink-400 border-2 border-pink-600 text-pink-900 font-bold py-1 md:py-2 px-2 md:px-4 rounded-full shadow-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+                <i class="fas fa-microphone text-blue-600 md:text-xl"></i> Uji Speaking <i class="fas fa-chevron-right"></i>
+            </button>
+            <button onclick="startQuiz('writing')" class="btn-3d bg-green-400 border-2 border-green-600 text-green-900 font-bold py-1 md:py-2 px-2 md:px-4 rounded-full shadow-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+                <i class="fas fa-edit text-blue-600 md:text-xl"></i> Uji Writing <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="../js/app.js"></script>
+</body>
+</html>

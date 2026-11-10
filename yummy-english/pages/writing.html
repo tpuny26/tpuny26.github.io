@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yummy English: Food & Drinks</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Baloo 2 for a playful, rounded look -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Baloo 2"', 'cursive', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#ff4d4d',
+                            orange: '#ff9f1c',
+                            yellow: '#ffbf69',
+                            blue: '#2ec4b6',
+                            green: '#2ecc71',
+                            pink: '#ff9ff3',
+                            bg: '#fdf3e7', // Light warm background
+                        }
+                    },
+                    boxShadow: {
+                        'btn': '0 6px 0 rgba(0, 0, 0, 0.15)',
+                        'btn-active': '0 2px 0 rgba(0, 0, 0, 0.15)',
+                        'card': '0 8px 15px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+</head>
+<body data-page="writing">
+<div id="game-container">
+<!-- ================= SCREEN 5: UJI WRITING ================= -->
+    <div id="screen-writing" class="screen active bg-sky-100 p-4">
+         <!-- Top Header -->
+        <div class="flex justify-between items-center mb-2">
+            <button onclick="goToScreen('screen-menu')" class="btn-3d bg-white text-blue-600 font-bold py-1 px-4 border-2 border-blue-200 rounded-full shadow flex items-center gap-2"><i class="fas fa-home"></i> Kembali</button>
+            <div class="bg-white px-6 py-1 rounded-full border-4 border-green-300 shadow-md text-xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-edit text-green-500"></i> Uji Writing
+            </div>
+            <div class="bg-white px-4 py-1 rounded-lg border-2 border-gray-200 shadow font-bold text-gray-700 flex flex-col items-center">
+                <span class="text-xs text-gray-500">Soal</span>
+                <span id="write-q-num">1/10</span>
+            </div>
+        </div>
+
+        <div class="flex gap-4 flex-grow bg-white border-4 border-orange-800 rounded-2xl p-4 shadow-xl">
+             <!-- Sidebar -->
+            <div class="w-1/4 petunjuk-panel flex flex-col h-full border-green-400 bg-green-50">
+                <div class="bg-green-500 text-white font-bold rounded-full py-1 text-center mb-4 shadow"><i class="fas fa-lightbulb text-yellow-300 mr-2"></i> Petunjuk</div>
+                <div class="petunjuk-step"><div class="step-num bg-green-600">1</div><span>Perhatikan gambar.</span></div>
+                <div class="petunjuk-step"><div class="step-num bg-green-600">2</div><span>Tulis nama dalam bahasa Inggris di kolom yang tersedia.</span></div>
+                <div class="petunjuk-step"><div class="step-num bg-green-600">3</div><span>Klik 'Periksa Jawaban'.</span></div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="w-2/4 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 flex flex-col items-center relative shadow-inner">
+                 <div class="absolute top-2 left-0 w-full text-center">
+                    <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow"><i class="fas fa-pencil-alt mr-1"></i> Tulis nama dalam bahasa Inggris!</span>
+                </div>
+                
+                <div id="write-target-emoji" class="text-8xl my-6 drop-shadow-xl">🍛</div>
+                
+                <div class="w-full bg-green-100 border border-green-200 rounded-xl p-4 flex flex-col items-center">
+                    <label class="font-bold text-gray-700 mb-2">Tulis jawabanmu di sini:</label>
+                    <input type="text" id="write-input" class="w-full border-2 border-gray-300 rounded-lg p-2 text-center font-bold text-xl text-blue-800 focus:outline-none focus:border-green-500 shadow-inner mb-3" placeholder="Type your answer here..." autocomplete="off">
+                    <button onclick="checkWriting()" class="bg-green-500 text-white font-bold py-2 px-6 rounded-full shadow-btn btn-3d hover:bg-green-600 w-full flex justify-center items-center gap-2"><i class="fas fa-check-circle"></i> Periksa Jawaban</button>
+                    <p id="write-feedback" class="mt-2 font-bold min-h-[24px] text-center"></p>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Word Bank -->
+            <div class="w-1/4 bg-gray-50 border-2 border-gray-200 rounded-xl p-3 flex flex-col relative">
+                <div class="bg-green-500 text-white font-bold rounded-full py-1 text-center mb-3 shadow text-sm"><i class="fas fa-lightbulb text-yellow-300 mr-1"></i> Word Bank</div>
+                <div class="flex flex-col gap-2 overflow-y-auto" id="word-bank-list">
+                    <!-- Buttons generated by JS -->
+                </div>
+                 <!-- Footer Nav -->
+                <div class="absolute bottom-4 right-4">
+                    <button onclick="nextWriting()" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-full shadow-btn btn-3d hover:bg-blue-600">Selanjutnya <i class="fas fa-chevron-right ml-1"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Global Modal Feedback (Benar/Salah) -->
+<div id="feedback-modal" class="modal-overlay" style="z-index: 999;">
+    <div class="modal-content border-white flex flex-col items-center justify-center w-80 text-center" id="feedback-content">
+        <div id="fb-icon" class="text-6xl mb-2">🌟</div>
+        <h2 id="fb-title" class="text-3xl font-bold mb-2">Good Job!</h2>
+        <p id="fb-text" class="text-gray-700 mb-4 font-bold text-lg"></p>
+        <button onclick="closeFeedback()" class="bg-blue-500 text-white font-bold py-2 px-8 rounded-full shadow-btn btn-3d">OK</button>
+    </div>
+</div>
+<script src="../js/app.js"></script>
+</body>
+</html>

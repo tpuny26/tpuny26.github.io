@@ -1,0 +1,391 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;
+    overflow: hidden;
+    font-family: 'Baloo 2', sans-serif;
+    touch-action: manipulation;
+}
+
+/* 16:9 Aspect Ratio Container */
+#game-container {
+    aspect-ratio: 16 / 9;
+    width: min(100vw, 100dvh * (16 / 9));
+    height: min(100dvh, 100vw * (9 / 16));
+    background-color: #fdf3e7;
+    background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #fdf3e7 100%);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+    #game-container {
+        border-radius: 24px;
+    }
+}
+
+/* Screens */
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: fadeIn 0.4s ease-out;
+}
+
+#screen-home {
+    background: #38bdf8 url("../assets/images/background.png") center / cover no-repeat;
+}
+
+#screen-home > .home-content {
+    justify-content: space-between;
+    padding-block: clamp(1rem, 4vh, 2.5rem);
+}
+
+#screen-home .home-logo {
+    display: block;
+    width: min(76vw, 52rem);
+    max-height: 35vh;
+    object-fit: contain;
+}
+
+.screen.active {
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Button 3D Effect */
+.btn-3d {
+    transition: all 0.1s ease;
+}
+
+.btn-3d:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Modals */
+.modal-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    z-index: 50;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    border: 6px solid #ffbf69;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    text-align: center;
+}
+
+/* Book Layout for Menu */
+.book-container {
+    background: #d2a679;
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3), 0 10px 20px rgba(0, 0, 0, 0.2);
+    flex-grow: 1;
+    display: flex;
+    position: relative;
+}
+
+.book-page {
+    background: #fffdf5;
+    flex: 1;
+    margin: 0 5px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e0d5c1;
+}
+
+/* Binder rings middle */
+.book-spine {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    bottom: 5%;
+    width: 30px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    z-index: 10;
+}
+
+.binder-ring {
+    width: 20px;
+    height: 10px;
+    background: linear-gradient(to bottom, #f0f0f0, #999, #f0f0f0);
+    border-radius: 10px;
+    border: 1px solid #666;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Item Menu Card */
+.menu-item {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 4px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.speaker-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: #3b82f6;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar Petunjuk */
+.petunjuk-panel {
+    background: #fff5f5;
+    border: 4px solid #fca5a5;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.petunjuk-step {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.step-num {
+    background: #ef4444;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Mic Pulsing */
+.mic-recording {
+    animation: pulse-mic 1s infinite;
+    background-color: #ef4444 !important;
+}
+
+@keyframes pulse-mic {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+/* Portrait phones and tablets */
+@media (orientation: portrait) {
+    body {
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    #game-container {
+        aspect-ratio: auto;
+        width: 100vw;
+        height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .screen {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    #screen-home > .home-content {
+        min-height: 100%;
+        height: auto;
+        justify-content: space-around;
+        gap: 1.5rem;
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    #screen-home .home-logo {
+        width: min(90%, 40rem);
+        max-height: 30vh;
+    }
+
+    #screen-home .grid.grid-cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: min(100%, 28rem);
+        height: auto;
+        gap: 1rem;
+        padding-bottom: 0.75rem;
+    }
+
+    #screen-home .grid.grid-cols-4 > button {
+        min-height: 10.5rem;
+    }
+
+    #screen-menu {
+        overflow-y: auto;
+    }
+
+    #screen-menu .book-container {
+        flex: none;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    #menu-page-1,
+    #menu-page-2 {
+        flex-direction: column;
+        height: auto;
+    }
+
+    #menu-page-1 .book-page,
+    #menu-page-2 .book-page {
+        flex: none;
+        min-height: min(45dvh, 24rem);
+        margin: 5px 0;
+    }
+
+    .book-spine {
+        display: none;
+    }
+
+    .menu-item {
+        min-height: 5rem;
+    }
+
+    #screen-menu > .w-full.flex.justify-center {
+        flex-wrap: wrap;
+        padding: 0.5rem 0 0.75rem;
+    }
+
+    #screen-listening,
+    #screen-speaking,
+    #screen-writing {
+        padding: 0.75rem;
+    }
+
+    #screen-listening > .flex.gap-4.flex-grow,
+    #screen-speaking > .flex.gap-4.flex-grow,
+    #screen-writing > .flex.gap-4.flex-grow {
+        flex-direction: column;
+        overflow: visible;
+        flex: none;
+    }
+
+    #screen-listening > .flex.gap-4.flex-grow > .petunjuk-panel,
+    #screen-speaking > .flex.gap-4.flex-grow > .petunjuk-panel,
+    #screen-writing > .flex.gap-4.flex-grow > .petunjuk-panel {
+        width: 100%;
+        height: auto;
+    }
+
+    #screen-listening > .flex.gap-4.flex-grow > .w-3\/4,
+    #screen-speaking > .flex.gap-4.flex-grow > .w-3\/4,
+    #screen-writing > .flex.gap-4.flex-grow > .w-3\/4,
+    #screen-writing > .flex.gap-4.flex-grow > .w-2\/4,
+    #screen-writing > .flex.gap-4.flex-grow > .w-1\/4 {
+        width: 100%;
+        min-height: 60dvh;
+    }
+
+    #screen-listening #listening-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        min-height: 15rem;
+    }
+
+    #screen-speaking > .flex.gap-4.flex-grow > .w-3\/4 {
+        flex-direction: column;
+    }
+
+    #screen-speaking > .flex.gap-4.flex-grow > .w-3\/4 > .w-1\/2 {
+        width: 100%;
+        min-height: 40dvh;
+    }
+
+    #screen-writing > .flex.gap-4.flex-grow > .w-1\/4:last-child > .absolute {
+        position: static;
+        align-self: flex-end;
+        margin-top: 1rem;
+    }
+
+    .modal-content {
+        max-width: calc(100% - 1.5rem);
+        max-height: calc(100% - 1.5rem);
+        padding: 1rem;
+        border-width: 4px;
+    }
+
+    .modal-content .grid.grid-cols-2,
+    .modal-content .grid.grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (orientation: portrait) and (min-width: 600px) {
+    #screen-home .grid.grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        max-width: 48rem;
+    }
+
+    .modal-content .grid.grid-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

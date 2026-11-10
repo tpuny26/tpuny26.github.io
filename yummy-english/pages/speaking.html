@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yummy English: Food & Drinks</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Baloo 2 for a playful, rounded look -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Baloo 2"', 'cursive', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#ff4d4d',
+                            orange: '#ff9f1c',
+                            yellow: '#ffbf69',
+                            blue: '#2ec4b6',
+                            green: '#2ecc71',
+                            pink: '#ff9ff3',
+                            bg: '#fdf3e7', // Light warm background
+                        }
+                    },
+                    boxShadow: {
+                        'btn': '0 6px 0 rgba(0, 0, 0, 0.15)',
+                        'btn-active': '0 2px 0 rgba(0, 0, 0, 0.15)',
+                        'card': '0 8px 15px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+</head>
+<body data-page="speaking">
+<div id="game-container">
+<!-- ================= SCREEN 4: UJI SPEAKING ================= -->
+    <div id="screen-speaking" class="screen active bg-sky-100 p-4">
+         <!-- Top Header -->
+        <div class="flex justify-between items-center mb-2">
+            <button onclick="goToScreen('screen-menu')" class="btn-3d bg-white text-blue-600 font-bold py-1 px-4 border-2 border-blue-200 rounded-full shadow flex items-center gap-2"><i class="fas fa-home"></i> Kembali</button>
+            <div class="bg-white px-6 py-1 rounded-full border-4 border-yellow-300 shadow-md text-xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-microphone text-pink-500"></i> Uji Speaking
+            </div>
+            <div class="bg-white px-4 py-1 rounded-lg border-2 border-gray-200 shadow font-bold text-gray-700 flex flex-col items-center">
+                <span class="text-xs text-gray-500">Soal</span>
+                <span id="speak-q-num">1/10</span>
+            </div>
+        </div>
+
+        <div class="flex gap-4 flex-grow bg-white border-4 border-orange-800 rounded-2xl p-4 shadow-xl">
+             <!-- Sidebar -->
+            <div class="w-1/4 petunjuk-panel flex flex-col h-full border-pink-400 bg-pink-50">
+                <div class="bg-pink-500 text-white font-bold rounded-full py-1 text-center mb-4 shadow"><i class="fas fa-lightbulb text-yellow-300 mr-2"></i> Petunjuk</div>
+                <div class="petunjuk-step"><div class="step-num">1</div><span>Perhatikan gambar makanan atau minuman yang muncul.</span></div>
+                <div class="petunjuk-step"><div class="step-num">2</div><span>Klik tombol mikrofon dan ucapkan nama dalam bahasa Inggris.</span></div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="w-3/4 flex gap-4 h-full">
+                <!-- Target Card -->
+                <div class="w-1/2 bg-orange-50 border-2 border-orange-200 rounded-xl p-4 flex flex-col items-center justify-center relative shadow-inner">
+                    <div class="absolute top-2 left-0 w-full text-center">
+                        <span class="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow"><i class="fas fa-bullhorn mr-1 text-yellow-300"></i> Ucapkan nama berikut!</span>
+                    </div>
+                    <div id="speak-target-emoji" class="text-8xl my-4 drop-shadow-xl">🍔</div>
+                    <div class="bg-pink-100 w-full rounded-lg py-2 text-center border border-pink-200 mt-2">
+                        <h3 id="speak-target-text" class="text-2xl font-bold text-blue-900">burger</h3>
+                    </div>
+                </div>
+
+                <!-- Record Area -->
+                <div class="w-1/2 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 flex flex-col items-center justify-center shadow-inner relative">
+                    <h3 class="font-bold text-gray-700 mb-6 text-lg">Rekam Suaramu</h3>
+                    
+                    <button id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-pink-400 rounded-full text-white text-4xl flex items-center justify-center shadow-btn btn-3d transition-colors duration-300 z-10 relative border-4 border-white">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    
+                    <p id="record-status" class="mt-4 font-bold text-gray-500">Klik mic untuk mulai</p>
+                    <p id="record-result" class="mt-2 text-lg font-bold min-h-[28px]"></p>
+
+                    <!-- Footer Nav Absolute to bottom right of this container -->
+                    <div class="absolute bottom-4 right-4">
+                        <button onclick="nextSpeaking()" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-full shadow-btn btn-3d hover:bg-blue-600">Selanjutnya <i class="fas fa-chevron-right ml-1"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Global Modal Feedback (Benar/Salah) -->
+<div id="feedback-modal" class="modal-overlay" style="z-index: 999;">
+    <div class="modal-content border-white flex flex-col items-center justify-center w-80 text-center" id="feedback-content">
+        <div id="fb-icon" class="text-6xl mb-2">🌟</div>
+        <h2 id="fb-title" class="text-3xl font-bold mb-2">Good Job!</h2>
+        <p id="fb-text" class="text-gray-700 mb-4 font-bold text-lg"></p>
+        <button onclick="closeFeedback()" class="bg-blue-500 text-white font-bold py-2 px-8 rounded-full shadow-btn btn-3d">OK</button>
+    </div>
+</div>
+<script src="../js/app.js"></script>
+</body>
+</html>
