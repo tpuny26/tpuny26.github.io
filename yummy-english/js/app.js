@@ -27,7 +27,7 @@
     ];
 
     function menuImagePath(item) {
-        const imageName = item.en === 'chocolate drink' ? 'iced milk' : item.en;
+        const imageName = item.en === 'chocolate drink' ? 'chocolate milk' : item.en;
         return `../assets/images/menu/${encodeURIComponent(imageName)}.png`;
     }
 
