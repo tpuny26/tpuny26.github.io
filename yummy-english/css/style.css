@@ -189,7 +189,7 @@ body {
 
 .menu-page-switch {
     position: absolute;
-    top: -8%;
+    top: 1%;
     right: 3%;
     z-index: 20;
     display: inline-flex;
