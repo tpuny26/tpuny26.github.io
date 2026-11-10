@@ -79,6 +79,7 @@ body {
     right: clamp(0.25rem, 1.5vw, 1rem);
     z-index: 20;
     width: clamp(5rem, 12vw, 9rem);
+    aspect-ratio: 3 / 2;
     padding: 0;
     border: 0;
     background: transparent;
@@ -99,7 +100,8 @@ body {
 .fullscreen-button img {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: contain;
 }
 
 .fullscreen-button-page {
@@ -108,7 +110,8 @@ body {
 
 .fullscreen-button-inline {
     position: static;
-    flex-shrink: 0;
+    flex: 0 1 clamp(5rem, 12vw, 9rem);
+    min-width: 0;
 }
 
 .screen.active {
