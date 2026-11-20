@@ -525,39 +525,6 @@ body[data-page="certificate"] #game-container {
     transform: translateY(1px);
 }
 
-.certificate-name-field {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex: 1;
-    min-width: 0;
-    color: #5b3315;
-    font-weight: 700;
-}
-
-.certificate-name-field span {
-    white-space: nowrap;
-    font-size: clamp(0.8rem, 1vw, 1rem);
-}
-
-.certificate-name-field input {
-    width: 100%;
-    min-width: 0;
-    border: 2px solid rgba(162, 97, 42, 0.35);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.9);
-    color: #5b3315;
-    padding: 0.72rem 0.9rem;
-    font: inherit;
-    font-size: clamp(0.9rem, 1.15vw, 1.05rem);
-    box-shadow: inset 0 1px 4px rgba(50, 28, 9, 0.04);
-}
-
-.certificate-name-field input:focus {
-    outline: 3px solid rgba(59, 130, 246, 0.28);
-    border-color: rgba(59, 130, 246, 0.7);
-}
-
 .certificate-print {
     background: linear-gradient(135deg, #f59e0b, #fbbf24);
     color: #fff;
@@ -645,16 +612,6 @@ body[data-page="certificate"] #game-container {
     .certificate-back,
     .certificate-print {
         width: 100%;
-    }
-
-    .certificate-name-field {
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .certificate-name-field span {
-        text-align: center;
     }
 
     .certificate-canvas {

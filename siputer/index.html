@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Belajar Komputer 3D</title>
+  <style>
+    :root {
+      --ink: #183153;
+      --muted: #617895;
+      --paper: #f2faff;
+      --line: #cfe7f3;
+      --blue: #4e8df5;
+      --orange: #ff936f;
+      --green: #3bb99e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      width: 100vw;
+      height: 100dvh;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      overflow: hidden;
+      background: url("asset/BG-HOME.png") center center / cover no-repeat fixed;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell {
+      width: min(100vw, 177.7778dvh);
+      height: min(100dvh, 56.25vw);
+      aspect-ratio: 16 / 9;
+      overflow: auto;
+      padding: clamp(16px, 3.2vh, 38px) clamp(18px, 4vw, 64px);
+      background: rgba(255,255,255,.04);
+      scrollbar-color: #b7c1d2 transparent;
+    }
+
+    main {
+      display: flex;
+      width: 100%;
+      min-height: 100%;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .heading {
+      height: 0;
+      margin: 0;
+      overflow: hidden;
+      opacity: 0;
+      text-align: center;
+    }
+
+    .mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 8px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, #ffffff, #e6f8ff);
+      box-shadow: 0 10px 28px rgba(67, 133, 190, .18), inset 0 0 0 1px white;
+      color: var(--blue);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3.3vw, 38px);
+      letter-spacing: -.045em;
+      background: linear-gradient(100deg, #387ee8, #825fe7 55%, #f18a72);
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(10px, 1.5vw, 18px);
+    }
+
+    .menu-card {
+      position: relative;
+      display: flex;
+      min-height: clamp(145px, 22vh, 205px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border: 1.5px solid rgba(196, 226, 242, .98);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .92);
+      padding: clamp(14px, 2vw, 24px);
+      color: inherit;
+      text-decoration: none;
+      font: inherit;
+      text-align: center;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 12px 30px rgba(66, 131, 175, .14);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .menu-card:focus-visible,
+    .credits-close:focus-visible {
+      outline: 3px solid #245fda;
+      outline-offset: 3px;
+    }
+
+    .menu-card::after {
+      content: "";
+      position: absolute;
+      right: -28px;
+      bottom: -38px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--tint);
+      opacity: .12;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--tone);
+      box-shadow: 0 18px 38px color-mix(in srgb, var(--tone) 22%, transparent);
+    }
+
+    .explore { --tone: var(--blue); --tint: var(--blue); }
+    .build { --tone: var(--orange); --tint: var(--orange); }
+    .practice { --tone: var(--green); --tint: var(--green); }
+    .credits-card { --tone: #e5a331; --tint: #e5a331; }
+
+    .icon {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      place-items: center;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--tint) 62%, #b8eaff));
+      color: white;
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--tone) 24%, transparent);
+    }
+
+    .icon svg {
+      width: 28px;
+      height: 28px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .menu-card h2 {
+      margin: 0;
+      font-size: clamp(17px, 1.8vw, 22px);
+      letter-spacing: -.025em;
+      text-align: center;
+    }
+
+    .credits {
+      margin-top: clamp(16px, 2.6vh, 26px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.9);
+      padding: 12px 16px;
+    }
+
+    .credits-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .credits h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .developer {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: right;
+    }
+
+    .developer strong { color: var(--ink); }
+
+    .credits-table-wrap {
+      overflow-x: auto;
+    }
+
+    .credits table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .credits th,
+    .credits td {
+      border-top: 1px solid #e4f0f7;
+      padding: 5px 8px;
+    }
+
+    .credits th { color: var(--muted); font-weight: 700; }
+    .credits td:first-child { width: 34px; color: var(--muted); }
+
+    .credits-dialog {
+      width: min(920px, calc(100vw - 32px));
+      max-height: min(82dvh, 760px);
+      border: 1.5px solid rgba(196, 226, 242, .98);
+      border-radius: 24px;
+      padding: 0;
+      color: var(--ink);
+      background: rgba(255, 255, 255, .94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 24px 70px rgba(45, 99, 145, .24);
+    }
+
+    .credits-dialog::backdrop {
+      background: rgba(16, 40, 72, .58);
+      backdrop-filter: blur(6px);
+    }
+
+    .credits-dialog .credits {
+      max-height: min(82dvh, 760px);
+      margin: 0;
+      overflow: auto;
+      border: 0;
+      border-radius: inherit;
+      background: transparent;
+      padding: clamp(18px, 3vw, 30px);
+    }
+
+    .credits-dialog .credits-heading {
+      align-items: center;
+    }
+
+    .credits-close {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #f3faff;
+      padding: 8px 14px;
+      color: var(--ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    @media (max-width: 760px) and (orientation: landscape) {
+      .menu { gap: 8px; }
+
+      .menu-card {
+        min-height: clamp(82px, 22vh, 112px);
+        gap: 8px;
+        border-radius: 14px;
+        padding: 10px 6px;
+      }
+
+      .icon {
+        width: clamp(32px, 8vw, 42px);
+        height: clamp(32px, 8vw, 42px);
+        border-radius: 12px;
+      }
+
+      .icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .menu-card h2 {
+        font-size: clamp(12px, 2.4vw, 16px);
+        overflow-wrap: anywhere;
+      }
+
+      .credits-dialog {
+        width: calc(100vw - 20px);
+        max-height: 88dvh;
+      }
+
+      .credits-dialog .credits {
+        max-height: 88dvh;
+        padding: 14px;
+      }
+
+      .credits-heading {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .developer {
+        font-size: 10px;
+        text-align: left;
+      }
+
+      .credits table {
+        font-size: 10px;
+        white-space: normal;
+      }
+
+      .credits th,
+      .credits td {
+        padding: 4px;
+      }
+
+      .credits td:nth-child(3) {
+        overflow-wrap: anywhere;
+      }
+    }
+
+    @media (max-height: 460px) and (orientation: landscape) {
+      .shell {
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+
+      .menu-card {
+        min-height: clamp(76px, 24vh, 108px);
+      }
+    }
+
+    .orientation-gate {
+      display: none;
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(rgba(234,248,255,.84), rgba(240,237,255,.84)), url("asset/BG-HOME.png") center / cover no-repeat;
+      padding: 28px;
+      color: var(--ink);
+      text-align: center;
+    }
+
+    .orientation-gate-content { max-width: 300px; }
+
+    .rotate-icon {
+      display: inline-block;
+      margin-bottom: 14px;
+      font-size: 56px;
+      animation: rotate-hint 1.8s ease-in-out infinite;
+    }
+
+    @keyframes rotate-hint {
+      0%, 20% { transform: rotate(0); }
+      65%, 100% { transform: rotate(90deg); }
+    }
+
+    @media (orientation: portrait) and (max-width: 900px) {
+      .orientation-gate { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main>
+      <div class="heading">
+        <div class="mark" aria-hidden="true">3D</div>
+        <h1>Belajar Komputer</h1>
+        <p class="subtitle">Pilih aktivitas pembelajaran</p>
+      </div>
+
+      <nav class="menu" aria-label="Menu pembelajaran">
+        <a class="menu-card explore" href="pages/eksplorasi.html">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="6"></circle>
+              <path d="m16 16 4 4M11 8v6M8 11h6"></path>
+            </svg>
+          </div>
+          <h2>Eksplorasi</h2>
+        </a>
+
+        <a class="menu-card build" href="pages/rakit.html">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+              <rect x="8" y="9" width="8" height="6" rx="1"></rect>
+              <path d="M8 2v3M12 2v3M16 2v3M8 19v3M12 19v3M16 19v3"></path>
+            </svg>
+          </div>
+          <h2>Rakit</h2>
+        </a>
+
+        <a class="menu-card practice" href="pages/latihan.html">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M7 3h10a2 2 0 0 1 2 2v16H7a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z"></path>
+              <path d="M7 17h12M8 7h8M8 11h6"></path>
+            </svg>
+          </div>
+          <h2>Latihan</h2>
+        </a>
+
+        <button class="menu-card credits-card" id="credits-open" type="button" aria-haspopup="dialog" aria-controls="credits-dialog">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path>
+            </svg>
+          </div>
+          <h2>Kredit &amp; Pengembang</h2>
+        </button>
+      </nav>
+    </main>
+  </div>
+
+  <dialog class="credits-dialog" id="credits-dialog" aria-labelledby="credits-title">
+    <section class="credits">
+      <div class="credits-heading">
+        <div>
+          <h2 id="credits-title">Pengembang &amp; Kredit Aset 3D</h2>
+          <p class="developer">Pengembang: <strong>SYAHIDAH HUMAIROH</strong> · SMPN 26 JAKARTA</p>
+        </div>
+        <button class="credits-close" id="credits-close" type="button">Tutup</button>
+      </div>
+      <div class="credits-table-wrap">
+        <table>
+          <thead>
+            <tr><th>No.</th><th>Aset</th><th>Kreator</th><th>Tahap</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Random Access Memory</td><td>ARComputerFundamentals</td><td>Process</td></tr>
+            <tr><td>2</td><td>Core i7 Processor</td><td>ARComputerFundamentals</td><td>Process</td></tr>
+            <tr><td>3</td><td>Wireless Adaptor</td><td>ARComputerFundamentals</td><td>Ekspansi</td></tr>
+            <tr><td>4</td><td>PSU</td><td>Groovex</td><td>Power</td></tr>
+            <tr><td>5</td><td>HDD</td><td>Nadya Sarieva</td><td>Storage</td></tr>
+            <tr><td>6</td><td>RTX 5070</td><td>TahmidTauz</td><td>Graphics</td></tr>
+            <tr><td>7</td><td>Samsung 990 PRO SSD</td><td>PolyDavid</td><td>Storage</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </dialog>
+
+  <div class="orientation-gate" role="status" aria-live="polite">
+    <div class="orientation-gate-content">
+      <span class="rotate-icon" aria-hidden="true">📱</span>
+      <h2>Putar perangkat Anda</h2>
+      <p>Halaman ini dirancang untuk tampilan 16:9. Silakan putar HP ke posisi horizontal untuk melanjutkan.</p>
+    </div>
+  </div>
+  <script>
+    const creditsDialog = document.getElementById('credits-dialog');
+    const creditsOpen = document.getElementById('credits-open');
+    const creditsClose = document.getElementById('credits-close');
+
+    creditsOpen.addEventListener('click', () => creditsDialog.showModal());
+    creditsClose.addEventListener('click', () => creditsDialog.close());
+    creditsDialog.addEventListener('click', event => {
+      if (event.target === creditsDialog) creditsDialog.close();
+    });
+  </script>
+</body>
+</html>

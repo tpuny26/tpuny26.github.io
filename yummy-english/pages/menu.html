@@ -60,11 +60,7 @@
                 <span class="text-[10px] font-bold text-gray-500">Menu Restoran</span>
                 <span class="text-lg font-bold text-orange-700 leading-tight">Nafisya</span>
             </div>
-            <div class="w-24">
-                <button id="btn-sertifikat" onclick="alert('Selesaikan semua kuis dulu ya!')" class="hidden btn-3d bg-green-500 text-white font-bold py-1 px-3 border-2 border-green-700 rounded-full shadow text-sm flex items-center gap-1">
-                    <i class="fas fa-award text-yellow-300"></i> Sertifikat
-                </button>
-            </div>
+            <div class="w-24"></div>
         </div>
 
         <!-- Book Layout (Diatur agar otomatis mengisi ruang kosong tanpa menabrak) -->
@@ -169,6 +165,9 @@
             </button>
             <button onclick="startQuiz('writing')" class="btn-3d bg-green-400 border-2 border-green-600 text-green-900 font-bold py-1 md:py-2 px-2 md:px-4 rounded-full shadow-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
                 <i class="fas fa-edit text-blue-600 md:text-xl"></i> Uji Writing <i class="fas fa-chevron-right"></i>
+            </button>
+            <button id="btn-sertifikat" onclick="navigateTo('certificate.html')" class="hidden btn-3d bg-green-500 border-2 border-green-700 text-white font-bold py-1 md:py-2 px-2 md:px-4 rounded-full shadow-lg flex items-center gap-1 md:gap-2 text-xs md:text-base">
+                <i class="fas fa-award text-yellow-300 md:text-xl"></i> Sertifikat <i class="fas fa-chevron-right"></i>
             </button>
         </div>
     </div>

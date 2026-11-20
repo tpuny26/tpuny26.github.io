@@ -76,8 +76,14 @@
                 </div>
 
                 <div class="bg-white rounded-full border-2 border-gray-200 shadow-inner flex items-center p-2 mx-auto w-3/4 mb-6">
-                    <button onclick="playListeningAudio()" class="bg-blue-500 text-white w-10 h-10 rounded-full flex justify-center items-center text-xl shadow btn-3d hover:bg-blue-600 flex-shrink-0"><i class="fas fa-play ml-1"></i></button>
-                    <div class="w-full h-2 bg-gray-300 rounded-full mx-4 overflow-hidden"><div class="h-full bg-blue-500 w-0" id="list-audio-bar"></div></div>
+                    <button id="list-audio-toggle" onclick="toggleListeningAudio()" aria-label="Putar audio listening" class="bg-blue-500 text-white w-10 h-10 rounded-full flex justify-center items-center text-xl shadow btn-3d hover:bg-blue-600 flex-shrink-0"><i id="list-audio-icon" class="fas fa-play ml-1"></i></button>
+                    <div class="flex-grow mx-4">
+                        <div class="w-full h-2 bg-gray-300 rounded-full overflow-hidden"><div class="h-full bg-blue-500 w-0" id="list-audio-bar"></div></div>
+                        <div class="flex justify-between text-xs font-bold text-gray-500 mt-1">
+                            <span id="list-audio-status" aria-live="polite">Menyiapkan audio...</span>
+                            <span id="list-audio-time">0:00 / 0:00</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-4 gap-3 flex-grow" id="listening-options">

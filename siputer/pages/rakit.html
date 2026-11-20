@@ -1,0 +1,2942 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meja Kerja Perakitan Komputer 3D</title>
+
+    <!-- Tailwind CSS for clean, responsive workshop UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js r128 for 3D rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <!-- Tone.js for subtle tactile workshop sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: url("../asset/BG-all.png") center center / cover no-repeat fixed;
+        }
+
+        body {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(100vw, 177.7778dvh);
+            height: min(100dvh, 56.25vw);
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: url("../asset/BG-all.png") center center / cover no-repeat fixed;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        #canvas-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            background: url("../asset/BG-all.png") center center / cover no-repeat;
+        }
+
+        #canvas-container.dragging-camera {
+            cursor: grabbing;
+        }
+
+        #canvas-container.hover-part {
+            cursor: pointer;
+        }
+
+        #canvas-container.dragging-part {
+            cursor: grabbing;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1.5px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .colorful-card-header {
+            background: linear-gradient(135deg, rgba(112, 225, 247, 0.75), rgba(186, 168, 255, 0.72));
+            border: 1.5px solid rgba(117, 200, 231, 0.55);
+        }
+
+        .colorful-card-controls {
+            background: linear-gradient(145deg, rgba(211, 231, 255, 0.9), rgba(230, 219, 255, 0.88));
+            border: 1.5px solid rgba(165, 180, 252, 0.65);
+        }
+
+        .tooltip-badge {
+            pointer-events: none;
+            transform: translate(-50%, -135%);
+            transition: opacity 0.15s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Menu visual: sama dengan halaman Eksplorasi dan Latihan */
+        .colorful-card-header,
+        .glass-panel,
+        .colorful-card-controls {
+            background: rgba(255, 255, 255, 0.92) !important;
+            border-color: rgba(196, 226, 242, 0.98) !important;
+            color: #183153 !important;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 12px 30px rgba(66, 131, 175, .14);
+        }
+
+        .colorful-card-header h1,
+        .glass-panel h2,
+        .glass-panel p,
+        .colorful-card-controls,
+        .colorful-card-controls li,
+        .colorful-card-controls span {
+            color: #183153 !important;
+        }
+
+        #progress-text,
+        #live-xp-badge,
+        #info-slot {
+            color: #617895 !important;
+        }
+
+        #edu-modal > div,
+        #completion-modal > div {
+            border-color: #cfe7f3 !important;
+            box-shadow: 0 24px 70px rgba(45, 99, 145, .24);
+        }
+
+        #edu-modal,
+        #completion-modal {
+            background: rgba(126, 190, 222, .28) !important;
+        }
+
+        #completion-modal .bg-slate-800 {
+            background: #e8f3fb !important;
+            border-color: #cfe7f3 !important;
+        }
+
+        #edu-modal .text-slate-100,
+        #completion-modal .text-slate-200,
+        #completion-modal .text-slate-300 {
+            color: #38536f !important;
+        }
+
+        #info-card .text-sky-200,
+        #info-card .text-fuchsia-200,
+        #info-card .text-slate-200,
+        #info-card .text-white {
+            color: #315a7c !important;
+        }
+
+        #info-card .text-amber-300 {
+            color: #bc7042 !important;
+        }
+
+        #checklist-panel .text-slate-200 {
+            color: #315a7c !important;
+        }
+
+        #rotation-toolbar {
+            position: fixed;
+            z-index: 25;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            transform: translate(-50%, -125%);
+            border: 1px solid #e3e7ef;
+            border-radius: 14px;
+            background: rgba(255,255,255,.96);
+            padding: 6px;
+            box-shadow: 0 12px 28px rgba(23,32,51,.16);
+            pointer-events: auto;
+        }
+
+        #rotation-toolbar button,
+        .assembly-point {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border: 0;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #e8faff, #f0edff 55%, #fff1e8);
+            color: #183153;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        #rotation-toolbar button {
+            width: 34px;
+            height: 34px;
+            background: #edf1f7;
+            color: #172033;
+            font-size: 16px;
+        }
+
+        #assembly-point-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 12;
+            pointer-events: none;
+        }
+
+        .assembly-point {
+            position: fixed;
+            display: none;
+            width: 36px;
+            height: 36px;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255,255,255,.75);
+            background: rgba(238,138,91,.58);
+            box-shadow: 0 4px 12px rgba(23,32,51,.18);
+            font-size: 12px;
+            pointer-events: auto;
+        }
+
+        @media (orientation: landscape) and (max-width: 900px) {
+            #top-hud {
+                top: 8px;
+                left: 8px;
+                right: auto;
+                width: 128.21%;
+                flex-wrap: nowrap;
+                gap: 6px;
+                transform: scale(.78);
+                transform-origin: top left;
+            }
+
+            #top-hud > .colorful-card-header {
+                max-width: 48%;
+                gap: 7px;
+                padding: 6px 8px;
+                border-radius: 12px;
+            }
+
+            #top-hud > .colorful-card-header > div:first-child {
+                width: 30px;
+                height: 30px;
+            }
+
+            #top-hud h1 {
+                overflow: hidden;
+                font-size: 12px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            #top-hud .w-24,
+            #top-hud .sm\:w-32 {
+                width: 64px;
+            }
+
+            #top-hud #progress-text,
+            #top-hud #live-xp-badge {
+                font-size: 10px;
+            }
+
+            #top-hud > .flex.items-center.gap-2 {
+                flex: 0 0 auto;
+                gap: 4px;
+            }
+
+            #top-hud a,
+            #top-hud button {
+                min-width: 32px;
+                min-height: 32px;
+                justify-content: center;
+                padding: 6px;
+                border-radius: 10px;
+            }
+
+            #top-hud a span,
+            #top-hud #btn-reset-camera span,
+            #top-hud #btn-reset-parts span,
+            #top-hud #btn-music span {
+                display: none;
+            }
+
+            #top-hud svg {
+                width: 15px;
+                height: 15px;
+            }
+
+            #bottom-hud {
+                right: auto;
+                bottom: 8px;
+                left: 8px;
+                width: 128.21%;
+                flex-direction: row !important;
+                flex-wrap: nowrap;
+                align-items: flex-end;
+                gap: 8px;
+                transform: scale(.78);
+                transform-origin: bottom left;
+            }
+
+            #bottom-hud > #info-card {
+                width: 38%;
+                max-width: none;
+                padding: 8px;
+                border-radius: 14px;
+            }
+
+            #info-card h2 { font-size: 11px; }
+            #info-card #info-slot { font-size: 9px; }
+            #info-card #info-desc {
+                display: -webkit-box;
+                overflow: hidden;
+                font-size: 9px;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+            }
+
+            #bottom-hud > div:nth-child(2) {
+                min-width: 0;
+                flex: 1;
+                flex-direction: row;
+                align-items: flex-end;
+                justify-content: flex-end;
+                gap: 6px;
+            }
+
+            #bottom-hud > div:nth-child(2) > .glass-panel {
+                padding: 8px;
+                border-radius: 14px;
+            }
+
+            #bottom-hud #checklist-panel {
+                gap: 4px;
+            }
+
+            #bottom-hud #checklist-panel button {
+                gap: 4px;
+                padding: 5px 6px;
+                font-size: 10px;
+            }
+
+            .assembly-point {
+                width: 30px;
+                height: 30px;
+                font-size: 10px;
+            }
+
+            #rotation-toolbar { gap: 3px; padding: 4px; }
+            #rotation-toolbar button { width: 28px; height: 28px; }
+
+            #edu-modal,
+            #completion-modal {
+                padding: 8px;
+            }
+
+            #edu-modal > div {
+                width: 100%;
+                max-width: min(390px, 88vw);
+                max-height: 88dvh;
+                overflow-y: auto;
+                border-radius: 18px;
+            }
+
+            #edu-modal #edu-header {
+                padding: 10px 14px;
+            }
+
+            #edu-modal #edu-slot-badge {
+                margin-bottom: 4px;
+                font-size: 9px;
+            }
+
+            #edu-modal #edu-title {
+                font-size: 17px;
+            }
+
+            #edu-modal > div > div:nth-child(2) {
+                padding: 10px 14px;
+            }
+
+            #edu-modal > div > div:nth-child(2) > div {
+                gap: 6px;
+            }
+
+            #edu-modal > div > div:nth-child(2) > div + div {
+                margin-top: 6px;
+            }
+
+            #edu-modal > div > div:nth-child(2) > div.rounded-2xl {
+                padding: 8px;
+            }
+
+            #edu-modal #edu-function,
+            #edu-modal #edu-daily {
+                font-size: 11px;
+                line-height: 1.35;
+            }
+
+            #edu-modal #btn-edu-close {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+
+            #completion-modal > div {
+                width: 100%;
+                max-width: min(500px, 90vw);
+                max-height: 88dvh;
+                overflow-y: auto;
+                border-radius: 18px;
+            }
+
+            #completion-modal #step-name > div:first-child {
+                padding: 10px 14px;
+            }
+
+            #completion-modal #step-name > div:first-child > div {
+                width: 38px;
+                height: 38px;
+                margin-bottom: 6px;
+                border-radius: 12px;
+            }
+
+            #completion-modal #step-name > div:first-child svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            #completion-modal h3 {
+                font-size: 17px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) {
+                padding: 10px 14px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) > div:first-child {
+                padding: 9px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) > div + div {
+                margin-top: 8px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) > div:first-child p:first-child {
+                font-size: 11px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) > div:first-child p:last-child {
+                font-size: 10px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) > div:last-child {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            #completion-modal #step-name > div:nth-child(2) > div:last-child button {
+                padding: 8px 10px;
+                font-size: 10px;
+            }
+        }
+
+        .orientation-gate { display: none; }
+
+        @media (orientation: portrait) and (max-width: 900px) {
+            .orientation-gate {
+                position: fixed;
+                z-index: 99999;
+                top: calc((100% - 100dvh) / 2);
+                left: calc((100% - 100vw) / 2);
+                width: 100vw;
+                height: 100dvh;
+                display: grid;
+                place-items: center;
+                padding: 32px;
+                background: linear-gradient(145deg, #e8faff, #f0edff 55%, #fff1e8);
+                color: #183153;
+                font: 700 20px/1.6 Inter, sans-serif;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- 3D Workbench Viewport -->
+    <div id="canvas-container" aria-label="Meja Kerja Perakitan Komputer 3D"></div>
+
+    <div id="rotation-toolbar" aria-label="Kontrol rotasi komponen">
+        <button type="button" data-rotate="left" title="Rotasi kiri">↺</button>
+        <button type="button" data-rotate="up" title="Rotasi atas">↑</button>
+        <button type="button" data-rotate="down" title="Rotasi bawah">↓</button>
+        <button type="button" data-rotate="right" title="Rotasi kanan">↻</button>
+    </div>
+
+    <div id="assembly-point-layer" aria-label="Titik pemasangan bernomor">
+        <button type="button" class="assembly-point" data-point="1">1</button>
+        <button type="button" class="assembly-point" data-point="2">2</button>
+        <button type="button" class="assembly-point" data-point="3">3</button>
+        <button type="button" class="assembly-point" data-point="4">4</button>
+        <button type="button" class="assembly-point" data-point="5">5</button>
+        <button type="button" class="assembly-point" data-point="6">6</button>
+        <button type="button" class="assembly-point" data-point="7">7</button>
+        <button type="button" class="assembly-point" data-point="8">8</button>
+        <button type="button" class="assembly-point" data-point="9">9</button>
+    </div>
+
+    <!-- Floating 3D Hover Tooltip -->
+    <div id="hover-tooltip" class="tooltip-badge fixed z-20 hidden px-3.5 py-1.5 rounded-xl glass-panel shadow-xl text-xs font-bold text-white whitespace-nowrap border-2 border-amber-400/70">
+        <span id="tooltip-name">Komponen</span>
+        <span id="tooltip-status" class="ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500 text-white">Di Baki</span>
+    </div>
+
+    <!-- Top Navigation & Status HUD -->
+    <header id="top-hud" class="fixed top-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- Brand & Progress (Colorful Card) -->
+        <div class="colorful-card-header rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-3 pointer-events-auto">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-pink-500 to-purple-600 flex items-center justify-center shadow-lg shrink-0 ring-2 ring-white/40">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                    <rect x="9" y="9" width="6" height="6"></rect>
+                    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-sm sm:text-base font-bold tracking-tight text-white leading-tight drop-shadow-sm">Lab Perakitan Komputer 3D</h1>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="w-24 sm:w-32 h-2 bg-white/70 rounded-full overflow-hidden ring-1 ring-sky-200">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-300 via-emerald-400 to-cyan-300 transition-all duration-500 rounded-full" style="width: 0%;"></div>
+                    </div>
+                    <span id="progress-text" class="text-[11px] font-bold text-amber-200">0 / 7 Terpasang</span>
+                    <span id="live-xp-badge" class="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400/25 text-amber-200 border border-amber-300/40">0 XP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Controls (Colorful Buttons) -->
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <a href="../index.html" title="Kembali ke menu utama"
+                class="bg-slate-800/90 hover:bg-slate-700 active:scale-95 transition-all rounded-xl px-3 py-2.5 text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 shadow-lg border border-white/15">
+                ← <span class="hidden sm:inline">Menu</span>
+            </a>
+            <button id="btn-reset-camera" title="Kembalikan kamera ke sudut meja kerja awal"
+                class="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-95 transition-all rounded-xl px-3 py-2.5 text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 shadow-lg border border-sky-300/40">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span class="hidden sm:inline">Reset Kamera</span>
+            </button>
+
+            <button id="btn-reset-parts" title="Kembalikan semua komponen ke baki komponen"
+                class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-95 transition-all rounded-xl px-3 py-2.5 text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 shadow-lg border border-amber-300/40">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span class="hidden sm:inline">Reset Part</span>
+            </button>
+
+            <button id="btn-music" title="Nyalakan / Matikan Musik Latar Riang"
+                class="bg-gradient-to-r from-fuchsia-500 to-pink-500 hover:from-fuchsia-400 hover:to-pink-400 active:scale-95 transition-all rounded-xl px-3 py-2.5 text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 shadow-lg border border-pink-300/40" aria-label="Toggle Musik">
+                <svg id="icon-music-on" class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+                </svg>
+                <svg id="icon-music-off" class="w-4 h-4 text-white/70 hidden" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M3 3l18 18"/>
+                </svg>
+                <span class="hidden md:inline" id="label-music">Musik</span>
+            </button>
+
+            <button id="btn-sound" title="Nyalakan / Matikan Efek Suara"
+                class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 transition-all rounded-xl p-2.5 text-white shadow-lg border border-emerald-300/40" aria-label="Toggle Efek Suara">
+                <svg id="icon-sound-on" class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                </svg>
+                <svg id="icon-sound-off" class="w-4 h-4 text-white/70 hidden" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-30 hidden px-4 py-2 rounded-2xl shadow-2xl text-xs sm:text-sm font-bold text-white border border-white/30 pointer-events-none transition-all duration-300 text-center max-w-[90vw]">
+        Pesan
+    </div>
+
+    <!-- Bottom HUD: Component Info, Colorful Checklist & Camera Guide -->
+    <div id="bottom-hud" class="fixed bottom-3 left-3 right-3 z-20 flex flex-col lg:flex-row items-stretch lg:items-end justify-between gap-2.5 pointer-events-none">
+        <!-- Active Component Info Card -->
+        <div id="info-card" class="glass-panel rounded-2xl p-3.5 shadow-2xl max-w-sm w-full pointer-events-auto border-2 border-sky-400/50 transition-colors">
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <h2 id="info-name" class="text-xs sm:text-sm font-extrabold text-white truncate">Pilih Komponen dari Baki</h2>
+                <span id="info-status-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/30 text-sky-200 border border-sky-400/40 shrink-0">Panduan</span>
+            </div>
+            <p id="info-slot" class="text-[11px] font-bold text-amber-300 mb-1">Klik komponen, lalu pilih titik bernomor</p>
+            <p id="info-desc" class="text-[11px] sm:text-xs text-slate-200 leading-relaxed">
+                Pilih komponen dari baki, atur arah jika perlu, lalu tempelkan pada salah satu titik bernomor.
+            </p>
+        </div>
+
+        <!-- Colorful Component Checklist & Camera Controls -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5 pointer-events-auto">
+            <!-- Checklist Card -->
+            <div class="glass-panel rounded-2xl p-3 shadow-2xl border-2 border-fuchsia-400/40">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <span class="text-xs font-extrabold text-fuchsia-200 tracking-wide uppercase">Daftar Komponen</span>
+                    <button id="btn-toggle-checklist" class="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 transition-colors">
+                        Sembunyikan
+                    </button>
+                </div>
+                <div id="checklist-panel" class="grid grid-cols-3 sm:grid-cols-3 gap-1.5"></div>
+            </div>
+
+            <!-- Workbench Camera Controls Card -->
+            <div class="colorful-card-controls hidden md:block rounded-2xl px-3.5 py-3 shadow-2xl text-[11px] text-indigo-100 max-w-[230px]">
+                <div class="font-extrabold text-amber-300 uppercase tracking-wide mb-1.5">Kontrol Meja Kerja</div>
+                <ul class="space-y-1 text-indigo-100/90">
+                    <li><span class="font-bold text-white">Klik Komponen:</span> Pilih komponen</li>
+                    <li><span class="font-bold text-white">Klik Angka:</span> Pasang di titik</li>
+                    <li><span class="font-bold text-white">Seret Meja:</span> Putar kamera</li>
+                    <li><span class="font-bold text-white">Scroll / Cubit:</span> Zoom in / out</li>
+                    <li><span class="font-bold text-white">Shift + Seret:</span> Geser (Pan)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational Component Pop-up Modal (Shown after every successful drop) -->
+    <div id="edu-modal" class="fixed inset-0 z-30 hidden items-center justify-center bg-cyan-100/70 backdrop-blur-sm p-4">
+        <div class="animate-pop rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-white/70 bg-white">
+            <div id="edu-header" class="p-5 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 text-white relative">
+                <span id="edu-slot-badge" class="inline-block text-[11px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/25 mb-1.5">
+                    Terpasang
+                </span>
+                <h3 id="edu-title" class="text-xl font-extrabold leading-tight drop-shadow-sm">Nama Komponen</h3>
+            </div>
+            <div class="p-5 space-y-3.5 bg-white">
+                <div class="rounded-2xl p-3.5 bg-sky-500/15 border border-sky-400/40">
+                    <div class="text-xs font-extrabold text-sky-300 uppercase tracking-wide mb-1">Fungsi pada Komputer</div>
+                    <p id="edu-function" class="text-xs sm:text-sm text-slate-100 leading-relaxed"></p>
+                </div>
+                <div class="rounded-2xl p-3.5 bg-amber-500/15 border border-amber-400/40">
+                    <div class="text-xs font-extrabold text-amber-300 uppercase tracking-wide mb-1">Peran di Kehidupan Sehari-hari</div>
+                    <p id="edu-daily" class="text-xs sm:text-sm text-slate-100 leading-relaxed"></p>
+                </div>
+                <div class="pt-1 flex justify-end">
+                    <button id="btn-edu-close" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 active:scale-95 text-sm font-extrabold text-white shadow-lg transition-all">
+                        Mengerti &amp; Lanjutkan (+25 XP)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion, Evaluation & XP Modal -->
+    <div id="completion-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-cyan-100/70 backdrop-blur-sm p-4">
+        <div class="animate-pop rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border-2 border-white/70 bg-white">
+            <div id="step-name">
+                <div class="p-6 bg-gradient-to-br from-emerald-500 via-teal-500 to-sky-500 text-center">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-white/25 backdrop-blur-sm border-2 border-white/50 flex items-center justify-center mb-3 shadow-lg">
+                        <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-extrabold text-white drop-shadow-sm">Hore! Perakitan Selesai!</h3>
+                    <p class="text-xs sm:text-sm text-white/90 mt-1 font-medium">Semua 7 komponen komputer sudah terpasang sempurna.</p>
+                </div>
+                <div class="p-6 bg-white space-y-4">
+                    <div class="rounded-2xl p-4 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-2 border-indigo-400/40">
+                        <p class="text-sm font-extrabold text-indigo-200">Rakitanmu sudah siap untuk dilihat dan diperiksa.</p>
+                        <p class="text-xs text-slate-300 mt-1">Untuk menguji pemahaman, buka menu Latihan dari halaman utama.</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-1">
+                        <button id="btn-modal-inspect-early" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-bold text-slate-200 transition-all border border-white/15">
+                            Lihat Rakitan Dulu
+                        </button>
+                        <button id="btn-modal-inspect" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 hover:brightness-110 text-sm font-bold text-white transition-all shadow-lg">
+                            Lihat Hasil Rakitan
+                        </button>
+                        <button id="btn-modal-restart" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-sm font-bold text-white transition-all shadow-lg">
+                            Rakit Lagi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+         * SIMULASI MEJA KERJA PERAKITAN KOMPUTER 3D (SMP)
+         * - Meja kerja laboratorium kayu 3D dengan matras ESD, baki komponen & alat
+         * - Motherboard ATX detail dengan slot realistis & dudukan SATA
+         * - 7 komponen interaktif: CPU, RAM, GPU, M.2 SSD, HDD, Kartu Wi-Fi, dan PSU
+         * - Pop-up edukasi berwarna tiap kali komponen berhasil dipasang
+         * - Backsound ceria prosedural menggunakan Tone.js
+         * ===================================================================== */
+
+        // Global State
+        let scene, camera, renderer;
+        let soundEnabled = true;
+        let musicEnabled = true;
+        let audioInitialized = false;
+        let bgmStarted = false;
+        let pickupSynth, snapSynth, removeSynth;
+        let bgmLeadSynth, bgmBassSynth, bgmLeadSeq, bgmBassSeq;
+
+        // Interactive Arrays & Lookups
+        const components = [];          // Metadata & 3D meshes for the 6 hardware parts
+        const interactableMeshes = [];  // All child meshes mapped back to component ID
+        const slotIndicators = {};      // Visual 3D placement indicators per component ID
+
+        // Dragging & Hover State
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.85); // Elevated tabletop drag plane
+        const dragIntersection = new THREE.Vector3();
+        const dragOffset = new THREE.Vector3();
+
+        let hoveredComp = null;
+        let draggedComp = null;
+        let selectedComp = null;
+        let isNearCorrectSlot = false;
+        let completionShown = false;
+        let pendingCompletionModal = false;
+        let currentEduCompId = null;
+
+        // Sistem XP & Evaluasi Siswa
+        const XP_RULES = {
+            perAssembly: 50,   // 7 komponen x 50 = 350 XP
+            perReading: 25     // 7 info dibaca x 25 = 175 XP
+        };
+
+        const xpState = {
+            installedEver: new Set(),
+            readInfoEver: new Set()
+        };
+
+
+        // Smooth Animation Queue for snapping parts into slots or tray
+        const activeAnimations = [];
+
+        // Camera Controller State (Spherical coordinates around workbench target)
+        // Default: Three-quarter top-down POV (~47 degrees looking down at workbench)
+        const isCompactLandscape = () => window.matchMedia('(orientation: landscape) and (max-width: 900px)').matches;
+        const getDefaultCameraRadius = () => isCompactLandscape() ? 19.2 : 15.8;
+        let compactLandscape = isCompactLandscape();
+
+        const DEFAULT_CAM = {
+            target: new THREE.Vector3(-0.4, 0.15, 0.25),
+            radius: getDefaultCameraRadius(),
+            theta: 0.04,       // Slightly angled front view
+            phi: 0.78          // ~45 deg from vertical => 45 deg pitch looking down
+        };
+
+        const camState = {
+            target: DEFAULT_CAM.target.clone(),
+            desiredTarget: DEFAULT_CAM.target.clone(),
+            radius: DEFAULT_CAM.radius,
+            desiredRadius: DEFAULT_CAM.radius,
+            theta: DEFAULT_CAM.theta,
+            desiredTheta: DEFAULT_CAM.theta,
+            phi: DEFAULT_CAM.phi,
+            desiredPhi: DEFAULT_CAM.phi,
+            isOrbiting: false,
+            isPanning: false,
+            lastX: 0,
+            lastY: 0,
+            pinchStartDist: 0,
+            pinchStartRadius: 0
+        };
+
+        // Camera Safety Boundaries (Prevents going under table or losing the workbench)
+        const CAM_LIMITS = {
+            minPhi: 0.22,      // Prevent overhead gimbal flip
+            maxPhi: 1.28,      // ~73 deg from vertical -> stays safely above tabletop!
+            minRadius: 4.2,    // Close-up inspection of CPU pins & RAM latches
+            maxRadius: 21.5,   // Full workbench overview
+            minX: -5.5, maxX: 5.5,
+            minZ: -3.8, maxZ: 4.2
+        };
+
+        // Component Educational Data & Physical Workbench Coordinates
+        // Tabletop surface is y = 0. Motherboard top PCB is y = 0.15.
+        const COMPONENT_DEFS = [
+            {
+                id: 'cpu',
+                name: 'CPU (Prosesor)',
+                shortName: 'CPU',
+                slotName: 'Soket CPU LGA',
+                description: 'Otak utama komputer yang menjalankan semua perintah dan perhitungan program.',
+                functionText: 'CPU (Central Processing Unit) bertugas memproses data, menjalankan instruksi sistem operasi, dan mengatur kerja seluruh komponen komputer lainnya.',
+                dailyLifeText: 'Saat kamu mengetik tugas di Word, menghitung rumus di Excel, membuka banyak tab browser, atau bermain game, CPU-lah yang berpikir super cepat agar semua perintah berjalan lancar tanpa macet.',
+                theme: {
+                    headerGrad: 'from-sky-500 via-blue-500 to-indigo-600',
+                    cardBorder: 'border-sky-400/70',
+                    badgeGrad: 'from-sky-500 to-blue-600',
+                    chipIdle: 'bg-sky-500/20 border-sky-400/50 text-sky-200',
+                    chipDone: 'bg-gradient-to-r from-sky-500 to-blue-600 border-sky-300 text-white shadow-md',
+                    dot: 'bg-sky-300'
+                },
+                trayPos: new THREE.Vector3(-7.1, 0.16, -2.62),
+                trayRot: new THREE.Euler(-Math.PI / 2, -Math.PI / 2, 0),
+                assetFile: '../asset/core_i7_processor.glb',
+                targetSize: new THREE.Vector3(1.12, 0.16, 1.12),
+                preserveAspect: true,
+                modelRotation: new THREE.Euler(-Math.PI / 2, 0, 0),
+                slotPos: new THREE.Vector3(-0.9, 0.21, -0.75),
+                slotRot: new THREE.Euler(0, 0, 0),
+                dragHeight: 0.95,
+                snapRadius: 1.35,
+                indicatorSize: [1.32, 0.16, 1.32]
+            },
+            {
+                id: 'ram',
+                name: 'Modul RAM DDR3',
+                shortName: 'RAM',
+                slotName: 'Slot Memori DIMM',
+                description: 'Memori kerja sementara agar aplikasi aktif dapat diakses dengan cepat oleh CPU.',
+                functionText: 'RAM (Random Access Memory) menyimpan data dan aplikasi yang sedang aktif sementara waktu sehingga CPU bisa mengambil datanya dalam hitungan mikrodetik.',
+                dailyLifeText: 'Ketika kamu mengerjakan tugas sambil mendengarkan musik, membuka Google Chrome, dan chat bersama teman secara bersamaan (multitasking), RAM yang besar membuat komputer tetap kencang dan tidak lemot.',
+                theme: {
+                    headerGrad: 'from-violet-500 via-purple-500 to-fuchsia-600',
+                    cardBorder: 'border-purple-400/70',
+                    badgeGrad: 'from-violet-500 to-purple-600',
+                    chipIdle: 'bg-purple-500/20 border-purple-400/50 text-purple-200',
+                    chipDone: 'bg-gradient-to-r from-violet-500 to-fuchsia-600 border-purple-300 text-white shadow-md',
+                    dot: 'bg-purple-300'
+                },
+                trayPos: new THREE.Vector3(-6.05, 0.22, -0.68),
+                trayRot: new THREE.Euler(-Math.PI / 2, -Math.PI / 2, 0),
+                assetFile: '../asset/random_access_memory.glb',
+                targetSize: new THREE.Vector3(2.18, 0.62, 0.12),
+                preserveAspect: true,
+                modelRotation: new THREE.Euler(0, 0, 0),
+                slotPos: new THREE.Vector3(0.85, 0.56, -0.75),
+                slotRot: new THREE.Euler(-Math.PI / 2, -Math.PI / 2, 0),
+                dragHeight: 1.05,
+                snapRadius: 1.35,
+                indicatorSize: [0.22, 0.72, 2.35]
+            },
+            {
+                id: 'ssd',
+                name: 'M.2 NVMe SSD',
+                shortName: 'M.2 SSD',
+                slotName: 'Slot Penyimpanan M.2',
+                description: 'Penyimpanan super cepat tanpa piringan mekanis yang langsung menancap di motherboard.',
+                functionText: 'M.2 NVMe SSD berfungsi menyimpan sistem operasi (Windows/Linux), aplikasi, dan file penting dengan kecepatan baca-tulis berkali-kali lipat lebih cepat daripada hard disk biasa.',
+                dailyLifeText: 'Berkat SSD, komputer bisa menyala (booting) hanya dalam beberapa detik, aplikasi desain atau game terbuka sangat cepat, dan menyalin file tugas besar selesai dalam sekejap.',
+                theme: {
+                    headerGrad: 'from-amber-500 via-orange-500 to-red-500',
+                    cardBorder: 'border-amber-400/70',
+                    badgeGrad: 'from-amber-500 to-orange-600',
+                    chipIdle: 'bg-amber-500/20 border-amber-400/50 text-amber-200',
+                    chipDone: 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-300 text-white shadow-md',
+                    dot: 'bg-amber-300'
+                },
+                trayPos: new THREE.Vector3(-5.05, 0.15, -2.55),
+                trayRot: new THREE.Euler(0, 0, 0),
+                assetFile: '../asset/m.2_nvme_ssd_samsung_990_pro_1tb_3d_model.glb',
+                targetSize: new THREE.Vector3(1.45, 0.10, 0.38),
+                modelRotation: new THREE.Euler(0, 0, 0),
+                slotPos: new THREE.Vector3(-0.55, 0.21, 0.42),
+                slotRot: new THREE.Euler(0, 0, 0),
+                dragHeight: 0.90,
+                snapRadius: 1.25,
+                indicatorSize: [1.58, 0.12, 0.48]
+            },
+            {
+                id: 'gpu',
+                name: 'Kartu Grafis (GPU)',
+                shortName: 'GPU',
+                slotName: 'Slot PCIe x16',
+                description: 'Mengolah grafis 3D, video, dan gambar tajam untuk ditampilkan ke layar monitor.',
+                functionText: 'GPU (Graphics Processing Unit) khusus mengolah jutaan piksel, warna, animasi 3D, dan pemrosesan visual berat agar tidak membebani CPU.',
+                dailyLifeText: 'Sangat berperan saat kamu bermain game 3D dengan gambar halus, menonton video HD/4K di YouTube, mengedit video sekolah, atau membuat desain poster dan animasi 3D.',
+                theme: {
+                    headerGrad: 'from-emerald-500 via-green-500 to-teal-600',
+                    cardBorder: 'border-emerald-400/70',
+                    badgeGrad: 'from-emerald-500 to-teal-600',
+                    chipIdle: 'bg-emerald-500/20 border-emerald-400/50 text-emerald-200',
+                    chipDone: 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-300 text-white shadow-md',
+                    dot: 'bg-emerald-300'
+                },
+                trayPos: new THREE.Vector3(-7.05, 0.34, 2.80),
+                trayRot: new THREE.Euler(-Math.PI / 2, 0, 0),
+                assetFile: '../asset/nvidia_geforce_rtx_5070_-_msi_gaming_x_trio.glb',
+                targetSize: new THREE.Vector3(2.0, 1.15, 0.58),
+                preserveAspect: true,
+                modelRotation: new THREE.Euler(0, 0, 0),
+                slotPos: new THREE.Vector3(-1.0, 0.44, 1.25),
+                slotRot: new THREE.Euler(0, 0, 0),
+                dragHeight: 1.25,
+                snapRadius: 1.6,
+                indicatorSize: [3.15, 1.15, 0.58]
+            },
+            {
+                id: 'expansion',
+                name: 'Kartu Ekspansi Wi-Fi',
+                shortName: 'Kartu Wi-Fi',
+                slotName: 'Slot PCIe x1',
+                description: 'Menambahkan fitur koneksi internet nirkabel (Wi-Fi) dan Bluetooth pada komputer.',
+                functionText: 'Kartu Wi-Fi menghubungkan komputer desktop ke jaringan internet tanpa kabel LAN, sekaligus menyediakan koneksi Bluetooth untuk perangkat tambahan.',
+                dailyLifeText: 'Memudahkan kamu mencari materi pelajaran di internet, mengikuti kelas online, mengirim tugas, serta menyambungkan headset Bluetooth atau printer nirkabel ke komputer.',
+                theme: {
+                    headerGrad: 'from-pink-500 via-rose-500 to-red-500',
+                    cardBorder: 'border-pink-400/70',
+                    badgeGrad: 'from-pink-500 to-rose-600',
+                    chipIdle: 'bg-pink-500/20 border-pink-400/50 text-pink-200',
+                    chipDone: 'bg-gradient-to-r from-pink-500 to-rose-500 border-pink-300 text-white shadow-md',
+                    dot: 'bg-pink-300'
+                },
+                trayPos: new THREE.Vector3(-7.0, 0.18, 0.95),
+                trayRot: new THREE.Euler(-Math.PI / 2, 0, 0),
+                assetFile: '../asset/wireless_adaptor.glb',
+                targetSize: new THREE.Vector3(1.18, 0.62, 0.06),
+                modelRotation: new THREE.Euler(0, 0, 0),
+                slotPos: new THREE.Vector3(-1.55, 0.54, 2.15),
+                slotRot: new THREE.Euler(0, 0, 0),
+                dragHeight: 1.05,
+                snapRadius: 1.35,
+                indicatorSize: [1.35, 0.72, 0.28]
+            },
+            {
+                id: 'hdd',
+                name: 'Hard Drive SATA (HDD)',
+                shortName: 'HDD',
+                slotName: 'Dudukan Drive SATA',
+                description: 'Media penyimpanan berkapasitas besar untuk menyimpan arsip file, foto, dan video.',
+                functionText: 'HDD (Hard Disk Drive) menyimpan data secara permanen menggunakan piringan magnetik dengan kapasitas sangat besar (hingga beberapa Terabyte) dan harga terjangkau.',
+                dailyLifeText: 'Cocok digunakan untuk menyimpan koleksi foto kegiatan sekolah, video dokumentasi, arsip materi pelajaran, musik, dan cadangan (backup) file agar tidak hilang.',
+                theme: {
+                    headerGrad: 'from-cyan-500 via-teal-500 to-blue-600',
+                    cardBorder: 'border-cyan-400/70',
+                    badgeGrad: 'from-cyan-500 to-teal-600',
+                    chipIdle: 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200',
+                    chipDone: 'bg-gradient-to-r from-cyan-500 to-teal-500 border-cyan-300 text-white shadow-md',
+                    dot: 'bg-cyan-300'
+                },
+                trayPos: new THREE.Vector3(-4.99, 0.23, 1.05),
+                trayRot: new THREE.Euler(Math.PI / 2, 0, 0),
+                assetFile: '../asset/hdd.glb',
+                targetSize: new THREE.Vector3(1.55, 0.34, 2.15),
+                preserveAspect: true,
+                modelRotation: new THREE.Euler(-Math.PI / 2, 0, 0),
+                slotPos: new THREE.Vector3(4.15, 0.24, 0.85),
+                slotRot: new THREE.Euler(0, 0, 0),
+                dragHeight: 1.05,
+                snapRadius: 1.55,
+                indicatorSize: [1.55, 0.36, 2.15]
+            },
+            {
+                id: 'psu',
+                name: 'Power Supply Unit (PSU)',
+                shortName: 'PSU',
+                slotName: 'Tempat PSU / ATX',
+                description: 'Mengubah listrik dari stopkontak menjadi daya stabil untuk seluruh komponen komputer.',
+                functionText: 'PSU (Power Supply Unit) menyalurkan daya listrik teratur ke motherboard, CPU, GPU, penyimpanan, dan kipas.',
+                dailyLifeText: 'Tanpa PSU, tidak ada komponen yang dapat menerima daya untuk menyala, memproses data, atau menampilkan gambar.',
+                theme: {
+                    headerGrad: 'from-slate-500 via-gray-600 to-zinc-700',
+                    cardBorder: 'border-slate-400/70',
+                    badgeGrad: 'from-slate-500 to-zinc-700',
+                    chipIdle: 'bg-slate-500/20 border-slate-400/50 text-slate-200',
+                    chipDone: 'bg-gradient-to-r from-slate-500 to-zinc-700 border-slate-300 text-white shadow-md',
+                    dot: 'bg-slate-300'
+                },
+                trayPos: new THREE.Vector3(-5.0, 0.30, 3.10),
+                trayRot: new THREE.Euler(0, 0, 0),
+                assetFile: '../asset/psu_power_supply_unit.glb',
+                targetSize: new THREE.Vector3(1.80, 1.25, 1.80),
+                preserveAspect: true,
+                modelRotation: new THREE.Euler(0, 0, 0),
+                slotPos: new THREE.Vector3(2.55, 0.50, -1.85),
+                slotRot: new THREE.Euler(0, 0, 0),
+                dragHeight: 1.15,
+                snapRadius: 1.55,
+                indicatorSize: [1.95, 1.35, 1.95]
+            }
+        ];
+
+        /* =====================================================================
+         * EFEK SUARA & BACKSOUND RIANG (Tone.js - Prosedural, tanpa URL eksternal)
+         * ===================================================================== */
+        function initAudio() {
+            if (typeof Tone === 'undefined') return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+
+                if (!audioInitialized) {
+                    // Efek suara interaksi komponen
+                    pickupSynth = new Tone.Synth({
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.005, decay: 0.06, sustain: 0, release: 0.05 }
+                    }).toDestination();
+                    pickupSynth.volume.value = -15;
+
+                    snapSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.005, decay: 0.14, sustain: 0.03, release: 0.15 }
+                    }).toDestination();
+                    snapSynth.volume.value = -10;
+
+                    removeSynth = new Tone.Synth({
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.05 }
+                    }).toDestination();
+                    removeSynth.volume.value = -16;
+
+                    // Backsound riang (Gaya marimba/kalimba ceria untuk ruang belajar SMP)
+                    bgmLeadSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.015, decay: 0.18, sustain: 0.08, release: 0.28 }
+                    }).toDestination();
+                    bgmLeadSynth.volume.value = -21;
+
+                    bgmBassSynth = new Tone.Synth({
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.02, decay: 0.22, sustain: 0.15, release: 0.25 }
+                    }).toDestination();
+                    bgmBassSynth.volume.value = -23;
+
+                    // Melodi pentatonik C-Mayor yang ceria dan ringan (tidak bikin bosan)
+                    const melodyNotes = [
+                        'C5', 'E5', 'G5', 'A5', 'G5', null, 'E5', 'D5',
+                        'C5', 'D5', 'E5', 'G5', 'A5', null, 'G5', null,
+                        'A5', 'G5', 'E5', 'C5', 'D5', 'E5', 'G5', null,
+                        'E5', 'D5', 'C5', 'D5', 'E5', null, 'C5', null
+                    ];
+
+                    // Iringan bass ringan yang memantul ceria
+                    const bassNotes = [
+                        'C3', null, 'G3', null, 'C3', null, 'G3', null,
+                        'F3', null, 'C4', null, 'G3', null, 'D4', null,
+                        'A3', null, 'E4', null, 'F3', null, 'C4', null,
+                        'G3', null, 'D4', null, 'C3', null, 'G3', null
+                    ];
+
+                    Tone.Transport.bpm.value = 114;
+
+                    bgmLeadSeq = new Tone.Sequence((time, note) => {
+                        if (note && musicEnabled) {
+                            bgmLeadSynth.triggerAttackRelease(note, '8n', time);
+                        }
+                    }, melodyNotes, '8n');
+
+                    bgmBassSeq = new Tone.Sequence((time, note) => {
+                        if (note && musicEnabled) {
+                            bgmBassSynth.triggerAttackRelease(note, '8n', time);
+                        }
+                    }, bassNotes, '8n');
+
+                    audioInitialized = true;
+                }
+
+                // Mulai musik latar riang otomatis saat interaksi pertama jika aktif
+                if (musicEnabled && !bgmStarted) {
+                    bgmLeadSeq.start(0);
+                    bgmBassSeq.start(0);
+                    Tone.Transport.start();
+                    bgmStarted = true;
+                }
+            } catch (err) {
+                console.warn('Audio init skipped:', err);
+            }
+        }
+
+        function toggleMusic() {
+            musicEnabled = !musicEnabled;
+            initAudio();
+            if (audioInitialized) {
+                if (musicEnabled) {
+                    if (!bgmStarted) {
+                        bgmLeadSeq.start(0);
+                        bgmBassSeq.start(0);
+                        bgmStarted = true;
+                    }
+                    Tone.Transport.start();
+                } else {
+                    Tone.Transport.pause();
+                }
+            }
+            document.getElementById('icon-music-on').classList.toggle('hidden', !musicEnabled);
+            document.getElementById('icon-music-off').classList.toggle('hidden', musicEnabled);
+            showToast(musicEnabled ? 'Musik latar riang dinyalakan!' : 'Musik latar dimatikan', musicEnabled ? 'emerald' : 'amber');
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioInitialized) return;
+            try {
+                if (type === 'pickup') {
+                    pickupSynth.triggerAttackRelease('C5', '32n');
+                } else if (type === 'snap') {
+                    snapSynth.triggerAttackRelease(['E5', 'G5'], '16n');
+                } else if (type === 'remove') {
+                    removeSynth.triggerAttackRelease('A4', '32n');
+                } else if (type === 'complete') {
+                    const now = Tone.now();
+                    snapSynth.triggerAttackRelease('C5', '16n', now);
+                    snapSynth.triggerAttackRelease('E5', '16n', now + 0.09);
+                    snapSynth.triggerAttackRelease('G5', '16n', now + 0.18);
+                    snapSynth.triggerAttackRelease('C6', '8n', now + 0.27);
+                }
+            } catch (e) { /* Ignore audio timing errors */ }
+        }
+
+        /* =====================================================================
+         * PROCEDURAL CANVAS TEXTURES (No external image URLs)
+         * ===================================================================== */
+        function createWoodTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            // Warm maple/oak laboratory wood base
+            ctx.fillStyle = '#c49a6c';
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Subtle plank divisions
+            const planks = 6;
+            const plankH = 512 / planks;
+            for (let p = 0; p < planks; p++) {
+                const shade = (p % 2 === 0 ? 6 : -6) + (Math.random() * 8 - 4);
+                ctx.fillStyle = `rgb(${196 + shade}, ${152 + shade}, ${106 + shade})`;
+                ctx.fillRect(0, p * plankH, 512, plankH);
+
+                // Wood grain streaks
+                for (let i = 0; i < 65; i++) {
+                    const y = p * plankH + Math.random() * plankH;
+                    ctx.strokeStyle = `rgba(92, 58, 28, ${0.04 + Math.random() * 0.09})`;
+                    ctx.lineWidth = 0.8 + Math.random() * 2.2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.bezierCurveTo(
+                        170, y + (Math.random() * 10 - 5),
+                        340, y + (Math.random() * 10 - 5),
+                        512, y + (Math.random() * 4 - 2)
+                    );
+                    ctx.stroke();
+                }
+
+                // Plank seam
+                ctx.strokeStyle = 'rgba(72, 44, 20, 0.28)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(0, p * plankH);
+                ctx.lineTo(512, p * plankH);
+                ctx.stroke();
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(2, 1.5);
+            return tex;
+        }
+
+        function createESDMatTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            // Bright cyan ESD-safe work mat
+            ctx.fillStyle = '#b9edf5';
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Precision metric grid
+            ctx.strokeStyle = 'rgba(37, 112, 190, 0.17)';
+            ctx.lineWidth = 1;
+            const step = 32;
+            for (let i = 0; i <= 512; i += step) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+            }
+
+            // Border & ESD label
+            ctx.strokeStyle = 'rgba(37, 112, 190, 0.42)';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(14, 14, 484, 484);
+
+            ctx.fillStyle = 'rgba(30, 78, 118, 0.72)';
+            ctx.font = 'bold 16px Inter, sans-serif';
+            ctx.fillText('ALAS KERJA ANTI-STATIS (ESD-SAFE)', 28, 486);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createMotherboardPCBTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            // Fresh teal PCB with bright educational traces
+            ctx.fillStyle = '#258675';
+            ctx.fillRect(0, 0, 1024, 1024);
+
+            // Subtle fiberglass weave
+            ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 1024; i += 8) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1024); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
+            }
+
+            // Copper-tinted circuit traces
+            ctx.strokeStyle = 'rgba(128, 237, 255, 0.38)';
+            ctx.lineWidth = 2.5;
+            for (let i = 0; i < 55; i++) {
+                const x1 = 80 + Math.random() * 860;
+                const y1 = 80 + Math.random() * 860;
+                const midX = x1 + (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random() * 120);
+                const y2 = y1 + (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random() * 140);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(midX, y1);
+                ctx.lineTo(midX + 25, y2);
+                ctx.stroke();
+
+                // Via solder pads
+                ctx.fillStyle = 'rgba(255, 219, 112, 0.78)';
+                ctx.beginPath(); ctx.arc(x1, y1, 3.5, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Silkscreen markings for Junior High students
+            ctx.fillStyle = 'rgba(235, 255, 250, 0.9)';
+            ctx.font = 'bold 20px Inter, sans-serif';
+            ctx.fillText('CPU_SOCKET', 285, 225);
+            ctx.fillText('DIMM_A1 / B1', 640, 155);
+            ctx.fillText('M.2_NVME', 395, 520);
+            ctx.fillText('PCIEX16_GPU', 260, 680);
+            ctx.fillText('PCIEX1', 210, 865);
+            ctx.fillText('SATA_PORTS', 815, 620);
+
+            // Board model branding
+            ctx.fillStyle = 'rgba(220, 255, 245, 0.7)';
+            ctx.font = 'bold 26px Inter, sans-serif';
+            ctx.fillText('EDU-LAB ATX Z790', 555, 955);
+
+            // Corner mounting holes
+            const holes = [[42, 42], [982, 42], [42, 982], [982, 982], [512, 42], [512, 982]];
+            holes.forEach(([hx, hy]) => {
+                ctx.fillStyle = '#eab308';
+                ctx.beginPath(); ctx.arc(hx, hy, 14, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#176357';
+                ctx.beginPath(); ctx.arc(hx, hy, 7, 0, Math.PI * 2); ctx.fill();
+            });
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createLabelTexture(text, subtext, bgColor = '#334155', fgColor = '#f8fafc') {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, 256, 128);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(4, 4, 248, 120);
+
+            ctx.fillStyle = fgColor;
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 34px Inter, sans-serif';
+            ctx.fillText(text, 128, 62);
+            if (subtext) {
+                ctx.fillStyle = 'rgba(226,232,240,0.8)';
+                ctx.font = '600 18px Inter, sans-serif';
+                ctx.fillText(subtext, 128, 96);
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createContactShadowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(64, 64, 10, 64, 64, 62);
+            grad.addColorStop(0, 'rgba(0, 0, 0, 0.42)');
+            grad.addColorStop(0.65, 'rgba(0, 0, 0, 0.16)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 128, 128);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        /* =====================================================================
+         * SCENE & LIGHTING SETUP
+         * ===================================================================== */
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = null;
+            scene.fog = null;
+
+            camera = new THREE.PerspectiveCamera(
+                42,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                100
+            );
+            updateCameraTransform();
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.08;
+            container.appendChild(renderer.domElement);
+
+            // Warm overhead workshop studio lighting
+            const hemiLight = new THREE.HemisphereLight(0xf7fdff, 0x9abdc8, 0.82);
+            hemiLight.position.set(0, 20, 0);
+            scene.add(hemiLight);
+
+            // Primary overhead desk lamp casting crisp grounded contact shadows
+            const mainLight = new THREE.DirectionalLight(0xfff7ed, 1.15);
+            mainLight.position.set(6, 14, 7);
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 2;
+            mainLight.shadow.camera.far = 35;
+            const d = 12;
+            mainLight.shadow.camera.left = -d;
+            mainLight.shadow.camera.right = d;
+            mainLight.shadow.camera.top = d;
+            mainLight.shadow.camera.bottom = -d;
+            mainLight.shadow.bias = -0.0005;
+            scene.add(mainLight);
+
+            // Cool subtle fill light from left to separate metallic surfaces
+            const fillLight = new THREE.DirectionalLight(0xbae6fd, 0.38);
+            fillLight.position.set(-10, 8, -6);
+            scene.add(fillLight);
+
+            // Build the physical 3D environment
+            buildWorkshopRoom();
+            buildWorkbench();
+            buildMotherboard();
+            buildSATADriveBay();
+            buildPartsTray();
+            buildWorkshopTools();
+            buildComponents();
+            buildSlotIndicators();
+            buildAssemblyPoints();
+
+            // UI Checklist & Event Listeners
+            renderChecklist();
+            setupEventListeners();
+        }
+
+        /* =====================================================================
+         * PHYSICAL WORKBENCH & WORKSHOP ROOM
+         * ===================================================================== */
+        function buildWorkshopRoom() {
+            // Workshop floor well below the table so the workbench feels grounded in a lab
+            const floorGeo = new THREE.PlaneGeometry(70, 70);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0xd7eaf5, roughness: 0.9 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -6.8;
+            floor.receiveShadow = true;
+            scene.add(floor);
+        }
+
+        function buildWorkbench() {
+            const benchGroup = new THREE.Group();
+
+            // Wooden Tabletop (Top surface sits exactly at y = 0)
+            const woodTex = createWoodTexture();
+            const topGeo = new THREE.BoxGeometry(19.0, 0.65, 11.4);
+            const topMat = new THREE.MeshStandardMaterial({
+                map: woodTex,
+                roughness: 0.62,
+                metalness: 0.04
+            });
+            const tabletop = new THREE.Mesh(topGeo, topMat);
+            tabletop.position.set(0, -0.325, 0);
+            tabletop.receiveShadow = true;
+            tabletop.castShadow = true;
+            benchGroup.add(tabletop);
+
+            // Protective dark-steel front edge trim strip
+            const trimGeo = new THREE.BoxGeometry(19.04, 0.14, 0.08);
+            const trimMat = new THREE.MeshStandardMaterial({ color: 0x78a6c2, roughness: 0.45, metalness: 0.42 });
+            const frontTrim = new THREE.Mesh(trimGeo, trimMat);
+            frontTrim.position.set(0, -0.07, 5.71);
+            benchGroup.add(frontTrim);
+
+            // Sturdy steel laboratory table legs & under-frame
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x7898ae, roughness: 0.5, metalness: 0.48 });
+            const legGeo = new THREE.BoxGeometry(0.55, 6.2, 0.55);
+            const legPositions = [
+                [-8.6, -3.7, -4.8],
+                [8.6, -3.7, -4.8],
+                [-8.6, -3.7, 4.8],
+                [8.6, -3.7, 4.8]
+            ];
+            legPositions.forEach(([lx, ly, lz]) => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(lx, ly, lz);
+                leg.castShadow = true;
+                benchGroup.add(leg);
+            });
+
+            // Crossbar support under the workbench
+            const apronGeo = new THREE.BoxGeometry(17.4, 0.45, 9.8);
+            const apron = new THREE.Mesh(apronGeo, legMat);
+            apron.position.set(0, -0.85, 0);
+            benchGroup.add(apron);
+
+            // ESD Anti-Static Work Mat resting flat on the tabletop
+            const esdTex = createESDMatTexture();
+            const matGeo = new THREE.BoxGeometry(9.6, 0.03, 7.6);
+            const matMaterial = new THREE.MeshStandardMaterial({
+                map: esdTex,
+                roughness: 0.85,
+                metalness: 0.02
+            });
+            const esdMat = new THREE.Mesh(matGeo, matMaterial);
+            esdMat.position.set(0.8, 0.015, 0.25);
+            esdMat.receiveShadow = true;
+            benchGroup.add(esdMat);
+
+            scene.add(benchGroup);
+        }
+
+        /* =====================================================================
+         * DETAILED ATX MOTHERBOARD (Resting flat on ESD mat)
+         * ===================================================================== */
+        function buildMotherboard() {
+            const mbGroup = new THREE.Group();
+            const mbCenter = new THREE.Vector3(-0.2, 0.10, 0.2);
+            mbGroup.position.copy(mbCenter);
+
+            // Soft contact shadow directly under the motherboard
+            const shadowTex = createContactShadowTexture();
+            const shadowPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(6.9, 6.1),
+                new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.65, depthWrite: false })
+            );
+            shadowPlane.rotation.x = -Math.PI / 2;
+            shadowPlane.position.y = -0.068;
+            mbGroup.add(shadowPlane);
+
+            // Brass standoffs lifting PCB subtly off the ESD mat
+            const standoffMat = new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.8, roughness: 0.3 });
+            const standoffGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.05, 8);
+            [[-2.8, -2.4], [2.8, -2.4], [-2.8, 2.4], [2.8, 2.4]].forEach(([sx, sz]) => {
+                const st = new THREE.Mesh(standoffGeo, standoffMat);
+                st.position.set(sx, -0.045, sz);
+                mbGroup.add(st);
+            });
+
+            // Main ATX PCB Board
+            const pcbTex = createMotherboardPCBTexture();
+            const pcbMat = new THREE.MeshStandardMaterial({ map: pcbTex, roughness: 0.55, metalness: 0.15 });
+            const edgeMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.7 });
+            const pcb = new THREE.Mesh(
+                new THREE.BoxGeometry(6.2, 0.09, 5.4),
+                [edgeMat, edgeMat, pcbMat, edgeMat, edgeMat, edgeMat]
+            );
+            pcb.castShadow = true;
+            pcb.receiveShadow = true;
+            mbGroup.add(pcb);
+
+            // Top surface local Y is +0.045
+            const topY = 0.045;
+
+            // 1. Rear I/O Shield & Ports Block (Top-Left edge)
+            const ioMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.75, roughness: 0.32 });
+            const ioBlock = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.52, 2.2), ioMat);
+            ioBlock.position.set(-2.75, topY + 0.26, -1.25);
+            ioBlock.castShadow = true;
+            ioBlock.receiveShadow = true;
+            mbGroup.add(ioBlock);
+
+            // 2. VRM Heatsinks (Brushed dark aluminum)
+            const heatsinkMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.65, roughness: 0.35 });
+            const vrmTop = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.34, 0.42), heatsinkMat);
+            vrmTop.position.set(-0.7, topY + 0.17, -2.05);
+            vrmTop.castShadow = true;
+            mbGroup.add(vrmTop);
+
+            const vrmLeft = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.34, 1.55), heatsinkMat);
+            vrmLeft.position.set(-1.95, topY + 0.17, -1.0);
+            vrmLeft.castShadow = true;
+            mbGroup.add(vrmLeft);
+
+            // 3. CPU LGA Socket (Local: x = -0.7, z = -0.95 -> World: -0.9, z = -0.75)
+            const socketGroup = new THREE.Group();
+            socketGroup.position.set(-0.7, topY, -0.95);
+            const socketBase = new THREE.Mesh(
+                new THREE.BoxGeometry(1.26, 0.06, 1.26),
+                new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.4 })
+            );
+            socketBase.position.y = 0.03;
+            socketGroup.add(socketBase);
+
+            const pinArray = new THREE.Mesh(
+                new THREE.BoxGeometry(0.96, 0.07, 0.96),
+                new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.85, roughness: 0.35 })
+            );
+            pinArray.position.y = 0.035;
+            socketGroup.add(pinArray);
+
+            // Silver retention latch lever
+            const lever = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.02, 0.02, 1.28, 8),
+                ioMat
+            );
+            lever.rotation.x = Math.PI / 2;
+            lever.position.set(0.68, 0.06, 0);
+            socketGroup.add(lever);
+            mbGroup.add(socketGroup);
+
+            // 4. DIMM RAM Slots (2 slots side by side; primary slot at local x = 1.05, z = -0.95 -> World x = 0.85, z = -0.75)
+            const slotDarkMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 });
+            const latchMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.5 });
+            [1.05, 1.38].forEach((rx, idx) => {
+                const dimm = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.16, 0.16, 2.25),
+                    idx === 0 ? new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 }) : slotDarkMat
+                );
+                dimm.position.set(rx, topY + 0.08, -0.95);
+                dimm.castShadow = true;
+                mbGroup.add(dimm);
+
+                // Side locking clips
+                [-1.18, 1.18].forEach(lz => {
+                    const clip = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.22, 0.12), latchMat);
+                    clip.position.set(rx, topY + 0.11, -0.95 + lz);
+                    mbGroup.add(clip);
+                });
+            });
+
+            // 5. M.2 NVMe SSD Slot (Local: x = -0.35, z = 0.22 -> World: -0.55, 0.42)
+            const m2Conn = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.44), slotDarkMat);
+            m2Conn.position.set(-1.12, topY + 0.07, 0.22);
+            mbGroup.add(m2Conn);
+
+            const m2Standoff = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.12, 10), ioMat);
+            m2Standoff.position.set(0.38, topY + 0.06, 0.22);
+            mbGroup.add(m2Standoff);
+
+            // 6. PCIe x16 Slot for GPU (Local: x = -0.8, z = 1.05 -> World: -1.0, 1.25)
+            const pcie16Metal = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.25 });
+            const pcie16 = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.18, 0.20), pcie16Metal);
+            pcie16.position.set(-0.8, topY + 0.09, 1.05);
+            pcie16.castShadow = true;
+            mbGroup.add(pcie16);
+
+            const pcie16Inner = new THREE.Mesh(new THREE.BoxGeometry(2.22, 0.19, 0.08), slotDarkMat);
+            pcie16Inner.position.set(-0.8, topY + 0.095, 1.05);
+            mbGroup.add(pcie16Inner);
+
+            // 7. PCIe x1 Slot for Wi-Fi Card (Local: x = -1.35, z = 1.95 -> World: -1.55, 2.15)
+            const pcie1 = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.16), slotDarkMat);
+            pcie1.position.set(-1.35, topY + 0.08, 1.95);
+            mbGroup.add(pcie1);
+
+            // 8. Chipset Heatsink (Bottom-Right)
+            const chipset = new THREE.Mesh(
+                new THREE.BoxGeometry(1.35, 0.18, 1.15),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6, roughness: 0.35 })
+            );
+            chipset.position.set(1.55, topY + 0.09, 1.35);
+            chipset.castShadow = true;
+            mbGroup.add(chipset);
+
+            // 9. CMOS Battery (Shiny silver coin cell)
+            const cmos = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.24, 0.24, 0.07, 20),
+                new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.92, roughness: 0.15 })
+            );
+            cmos.position.set(0.35, topY + 0.04, 1.85);
+            mbGroup.add(cmos);
+
+            // 10. 24-Pin ATX Power Header & SATA Ports on Right Edge
+            const atx24 = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.24, 1.35), slotDarkMat);
+            atx24.position.set(2.75, topY + 0.12, -0.75);
+            mbGroup.add(atx24);
+
+            const sataBlock = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 0.72), slotDarkMat);
+            sataBlock.position.set(2.72, topY + 0.11, 0.65);
+            mbGroup.add(sataBlock);
+
+            // 11. Subtle Solid Capacitors near CPU VRM
+            const capGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.18, 12);
+            for (let i = 0; i < 6; i++) {
+                const cap = new THREE.Mesh(capGeo, ioMat);
+                cap.position.set(-1.55 + i * 0.28, topY + 0.09, -1.72);
+                mbGroup.add(cap);
+            }
+
+            scene.add(mbGroup);
+        }
+
+        /* =====================================================================
+         * SATA DRIVE BAY (Beside Motherboard, connected via 3D SATA Cable)
+         * ===================================================================== */
+        function buildSATADriveBay() {
+            const bayGroup = new THREE.Group();
+            bayGroup.position.set(4.15, 0.03, 0.85);
+
+            // Metal drive cradle resting flat on the ESD mat
+            const cradleMat = new THREE.MeshStandardMaterial({ color: 0x91b3c9, metalness: 0.35, roughness: 0.45 });
+            const base = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.08, 2.3), cradleMat);
+            base.position.y = 0.04;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            bayGroup.add(base);
+
+            // Left & right guide rails
+            [-0.81, 0.81].forEach(rx => {
+                const rail = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.26, 2.3), cradleMat);
+                rail.position.set(rx, 0.13, 0);
+                rail.castShadow = true;
+                bayGroup.add(rail);
+            });
+
+            // Back SATA connector plate
+            const backStop = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.28, 0.12), cradleMat);
+            backStop.position.set(0, 0.14, -1.1);
+            bayGroup.add(backStop);
+
+            scene.add(bayGroup);
+
+            // Realistic red SATA data cable curving from Motherboard SATA port to Drive Bay
+            const cableCurve = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(2.65, 0.22, 0.85),
+                new THREE.Vector3(3.12, 0.18, 0.42),
+                new THREE.Vector3(3.55, 0.12, -0.18),
+                new THREE.Vector3(4.15, 0.16, -0.26)
+            ]);
+            const cableGeo = new THREE.TubeGeometry(cableCurve, 24, 0.045, 8, false);
+            const cableMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.45 });
+            const cable = new THREE.Mesh(cableGeo, cableMat);
+            cable.castShadow = true;
+            scene.add(cable);
+        }
+
+        /* =====================================================================
+         * COMPONENT PARTS TRAY (Left side of workbench)
+         * ===================================================================== */
+        function buildPartsTray() {
+            const trayGroup = new THREE.Group();
+            trayGroup.position.set(-6.05, 0.0, 0.15);
+
+            // Contact shadow under tray
+            const shadowTex = createContactShadowTexture();
+            const trayShadow = new THREE.Mesh(
+                new THREE.PlaneGeometry(4.9, 8.5),
+                new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.55, depthWrite: false })
+            );
+            trayShadow.rotation.x = -Math.PI / 2;
+            trayShadow.position.y = 0.005;
+            trayGroup.add(trayShadow);
+
+            const trayMat = new THREE.MeshStandardMaterial({ color: 0xb9dce9, roughness: 0.65, metalness: 0.08 });
+            const dividerMat = new THREE.MeshStandardMaterial({ color: 0x78b5c9, roughness: 0.55, metalness: 0.12 });
+
+            // Tray base
+            const base = new THREE.Mesh(new THREE.BoxGeometry(4.35, 0.10, 7.95), trayMat);
+            base.position.y = 0.05;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            trayGroup.add(base);
+
+            // Outer raised rim walls
+            const wallH = 0.26;
+            const wallThick = 0.12;
+            const topWall = new THREE.Mesh(new THREE.BoxGeometry(4.35, wallH, wallThick), dividerMat);
+            topWall.position.set(0, wallH / 2, -3.92);
+            const botWall = topWall.clone();
+            botWall.position.z = 3.92;
+
+            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(wallThick, wallH, 7.95), dividerMat);
+            leftWall.position.set(-2.12, wallH / 2, 0);
+            const rightWall = leftWall.clone();
+            rightWall.position.x = 2.12;
+
+            [topWall, botWall, leftWall, rightWall].forEach(w => {
+                w.castShadow = true;
+                w.receiveShadow = true;
+                trayGroup.add(w);
+            });
+
+            // Internal compartment dividers matching the 6 component zones
+            const hDividers = [-1.62, -0.05, 1.85];
+            hDividers.forEach(zPos => {
+                const div = new THREE.Mesh(new THREE.BoxGeometry(4.15, 0.20, 0.08), dividerMat);
+                div.position.set(0, 0.12, zPos);
+                div.castShadow = true;
+                trayGroup.add(div);
+            });
+
+            // Vertical dividers for the split component rows
+            const vDivTop = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.20, 2.25), dividerMat);
+            vDivTop.position.set(0, 0.12, -2.75);
+            trayGroup.add(vDivTop);
+
+            const vDivMid = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.20, 1.88), dividerMat);
+            vDivMid.position.set(0, 0.12, 0.90);
+            trayGroup.add(vDivMid);
+
+            const vDivBottom = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.20, 1.95), dividerMat);
+            vDivBottom.position.set(0, 0.12, 2.88);
+            trayGroup.add(vDivBottom);
+
+            // Raised labels sit at each compartment's front edge, clear of the models.
+            const labels = [
+                { text: 'CPU', x: -1.0, z: -1.72 },
+                { text: 'M.2 SSD', x: 1.0, z: -1.72 },
+                { text: 'RAM', x: 0, z: -0.08 },
+                { text: 'WI-FI', x: -1.0, z: 1.78 },
+                { text: 'HDD', x: 1.0, z: 1.78 },
+                { text: 'GPU', x: -1.0, z: 4.04 },
+                { text: 'PSU', x: 1.0, z: 4.04 }
+            ];
+            labels.forEach(lbl => {
+                const tex = createLabelTexture(lbl.text, '', '#dff8ff', '#205d7b');
+                const plane = new THREE.Mesh(
+                    new THREE.PlaneGeometry(1.0, 0.36),
+                    new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.85 })
+                );
+                plane.position.set(lbl.x, 0.32, lbl.z);
+                trayGroup.add(plane);
+            });
+
+            scene.add(trayGroup);
+        }
+
+        /* =====================================================================
+         * WORKSHOP DETAILS (Screwdriver, Magnetic Screw Dish & Screws, Ruler)
+         * ===================================================================== */
+        function buildWorkshopTools() {
+            // 1. Phillips-Head Screwdriver resting on the right side of the workbench
+            const driverGroup = new THREE.Group();
+            driverGroup.position.set(6.85, 0.20, 0.4);
+            driverGroup.rotation.y = 0.22;
+
+            // Ergonomic rubber handle
+            const handleGeo = new THREE.CylinderGeometry(0.18, 0.15, 1.65, 16);
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.55 });
+            const handle = new THREE.Mesh(handleGeo, handleMat);
+            handle.rotation.x = Math.PI / 2;
+            handle.position.z = 1.05;
+            handle.castShadow = true;
+            driverGroup.add(handle);
+
+            // Black grip band
+            const grip = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.19, 0.19, 0.72, 16),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 })
+            );
+            grip.rotation.x = Math.PI / 2;
+            grip.position.z = 0.95;
+            driverGroup.add(grip);
+
+            // Chrome steel shaft
+            const shaft = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.045, 0.045, 2.2, 12),
+                new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 })
+            );
+            shaft.rotation.x = Math.PI / 2;
+            shaft.position.z = -0.85;
+            shaft.castShadow = true;
+            driverGroup.add(shaft);
+
+            // Magnetized dark tip
+            const tip = new THREE.Mesh(
+                new THREE.ConeGeometry(0.045, 0.22, 4),
+                new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.35 })
+            );
+            tip.rotation.x = -Math.PI / 2;
+            tip.position.z = -2.05;
+            driverGroup.add(tip);
+
+            scene.add(driverGroup);
+
+            // 2. Magnetic Stainless-Steel Screw Dish (Top-Right)
+            const dishGroup = new THREE.Group();
+            dishGroup.position.set(6.6, 0.0, -2.55);
+
+            const steelMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.25 });
+            const dishBase = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.65, 0.16, 28), steelMat);
+            dishBase.position.y = 0.08;
+            dishBase.castShadow = true;
+            dishBase.receiveShadow = true;
+            dishGroup.add(dishBase);
+
+            const dishInner = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.74, 0.60, 0.04, 28),
+                new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.35 })
+            );
+            dishInner.position.y = 0.15;
+            dishGroup.add(dishInner);
+
+            // Tiny metallic computer screws inside the magnetic dish
+            const screwMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.3 });
+            const screwPositions = [
+                [-0.25, -0.15], [0.18, -0.22], [0.32, 0.12],
+                [-0.12, 0.28], [0.04, -0.02], [-0.35, 0.10], [0.16, 0.26]
+            ];
+            screwPositions.forEach(([sx, sz], idx) => {
+                const screw = new THREE.Group();
+                const head = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.03, 10), screwMat);
+                const thread = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.13, 8), screwMat);
+                thread.position.y = -0.07;
+                screw.add(head, thread);
+                screw.position.set(sx, 0.20, sz);
+                screw.rotation.set(Math.PI / 2.2, idx * 0.9, 0.2);
+                dishGroup.add(screw);
+            });
+
+            scene.add(dishGroup);
+
+            // 3. Anodized Aluminum Reference Ruler along the front-right edge
+            const ruler = new THREE.Mesh(
+                new THREE.BoxGeometry(4.2, 0.03, 0.42),
+                new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.72, roughness: 0.3 })
+            );
+            ruler.position.set(3.4, 0.015, 4.65);
+            ruler.rotation.y = -0.04;
+            ruler.castShadow = true;
+            ruler.receiveShadow = true;
+            scene.add(ruler);
+        }
+
+        /* =====================================================================
+         * 6 REMOVABLE COMPUTER HARDWARE COMPONENTS
+         * ===================================================================== */
+        function createCPUMesh() {
+            const group = new THREE.Group();
+            // Green/teal substrate PCB
+            const sub = new THREE.Mesh(
+                new THREE.BoxGeometry(1.12, 0.04, 1.12),
+                new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.45 })
+            );
+            sub.castShadow = true;
+            group.add(sub);
+
+            // Brushed nickel Integrated Heat Spreader (IHS)
+            const ihsTex = createLabelTexture('CORE i7', '3.8 GHz CPU', '#cbd5e1', '#1e293b');
+            const ihsMat = new THREE.MeshStandardMaterial({ map: ihsTex, metalness: 0.72, roughness: 0.28 });
+            const sideMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.25 });
+            const ihs = new THREE.Mesh(
+                new THREE.BoxGeometry(0.88, 0.07, 0.88),
+                [sideMat, sideMat, ihsMat, sideMat, sideMat, sideMat]
+            );
+            ihs.position.y = 0.055;
+            ihs.castShadow = true;
+            group.add(ihs);
+
+            // Gold orientation triangle corner marker
+            const tri = new THREE.Mesh(
+                new THREE.BoxGeometry(0.11, 0.05, 0.11),
+                new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.3 })
+            );
+            tri.position.set(-0.48, 0.01, 0.48);
+            group.add(tri);
+
+            return group;
+        }
+
+        function createRAMMesh() {
+            const group = new THREE.Group();
+            // Black heatspreader body (long along X in local space)
+            const bodyTex = createLabelTexture('DDR3 4GB', '1500 MHz', '#1e293b', '#38bdf8');
+            const sideMat = new THREE.MeshStandardMaterial({ map: bodyTex, roughness: 0.4, metalness: 0.35 });
+            const darkMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.4 });
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(2.18, 0.62, 0.12),
+                [darkMat, darkMat, darkMat, darkMat, sideMat, sideMat]
+            );
+            body.castShadow = true;
+            group.add(body);
+
+            // Top accent light bar
+            const accent = new THREE.Mesh(
+                new THREE.BoxGeometry(2.14, 0.07, 0.13),
+                new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.35 })
+            );
+            accent.position.y = 0.32;
+            group.add(accent);
+
+            // Gold edge connector pins at bottom
+            const pins = new THREE.Mesh(
+                new THREE.BoxGeometry(2.08, 0.12, 0.05),
+                new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.85, roughness: 0.25 })
+            );
+            pins.position.y = -0.34;
+            group.add(pins);
+
+            return group;
+        }
+
+        function createSSDMesh() {
+            const group = new THREE.Group();
+            const pcb = new THREE.Mesh(
+                new THREE.BoxGeometry(1.45, 0.04, 0.38),
+                new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 })
+            );
+            pcb.castShadow = true;
+            group.add(pcb);
+
+            // M.2 Label sticker
+            const lblTex = createLabelTexture('NVMe SSD', '1TB M.2', '#0369a1', '#f8fafc');
+            const sticker = new THREE.Mesh(
+                new THREE.BoxGeometry(1.08, 0.025, 0.32),
+                new THREE.MeshStandardMaterial({ map: lblTex, roughness: 0.4 })
+            );
+            sticker.position.set(0.06, 0.025, 0);
+            group.add(sticker);
+
+            // Gold M-Key connector on left edge
+            const pins = new THREE.Mesh(
+                new THREE.BoxGeometry(0.14, 0.045, 0.34),
+                new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.85, roughness: 0.25 })
+            );
+            pins.position.set(-0.68, 0, 0);
+            group.add(pins);
+
+            return group;
+        }
+
+        function createGPUMesh() {
+            const group = new THREE.Group();
+            // Main GPU shroud (stands upright when installed: length along X, height along Y, thickness along Z)
+            const shroudMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.42, metalness: 0.45 });
+            const shroud = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.96, 0.48), shroudMat);
+            shroud.castShadow = true;
+            shroud.receiveShadow = true;
+            group.add(shroud);
+
+            // Top backplate accent stripe
+            const backplateTex = createLabelTexture('RTX GRAPHICS', '8GB GDDR6', '#0f172a', '#22c55e');
+            const topPlate = new THREE.Mesh(
+                new THREE.BoxGeometry(2.96, 0.04, 0.46),
+                new THREE.MeshStandardMaterial({ map: backplateTex, roughness: 0.35, metalness: 0.4 })
+            );
+            topPlate.position.y = 0.48;
+            group.add(topPlate);
+
+            // Dual cooling fans on front face (+Z)
+            const fanRingMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6, roughness: 0.35 });
+            const hubMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+            [-0.72, 0.72].forEach(fx => {
+                const fan = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.06, 20), fanRingMat);
+                fan.rotation.x = Math.PI / 2;
+                fan.position.set(fx, 0, 0.23);
+                group.add(fan);
+
+                const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 16), hubMat);
+                hub.rotation.x = Math.PI / 2;
+                hub.position.set(fx, 0, 0.24);
+                group.add(hub);
+            });
+
+            // Metal rear I/O mounting bracket (left side)
+            const bracket = new THREE.Mesh(
+                new THREE.BoxGeometry(0.06, 1.08, 0.50),
+                new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.25 })
+            );
+            bracket.position.set(-1.52, -0.02, 0);
+            group.add(bracket);
+
+            // Gold PCIe x16 edge connector at bottom
+            const pciePins = new THREE.Mesh(
+                new THREE.BoxGeometry(2.1, 0.16, 0.08),
+                new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.85, roughness: 0.25 })
+            );
+            pciePins.position.set(-0.08, -0.54, 0);
+            group.add(pciePins);
+
+            return group;
+        }
+
+        function createExpansionCardMesh() {
+            const group = new THREE.Group();
+            // Compact dark green/black PCIe x1 PCB
+            const pcb = new THREE.Mesh(
+                new THREE.BoxGeometry(1.18, 0.62, 0.06),
+                new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.5 })
+            );
+            pcb.castShadow = true;
+            group.add(pcb);
+
+            // Wi-Fi RF shield metal module on board
+            const shield = new THREE.Mesh(
+                new THREE.BoxGeometry(0.45, 0.34, 0.10),
+                new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.25 })
+            );
+            shield.position.set(0.08, 0.05, 0.04);
+            group.add(shield);
+
+            // Rear metal bracket
+            const bracket = new THREE.Mesh(
+                new THREE.BoxGeometry(0.06, 0.78, 0.20),
+                new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.3 })
+            );
+            bracket.position.set(-0.61, -0.02, 0);
+            group.add(bracket);
+
+            // Twin black Wi-Fi antennas sticking out from bracket
+            const antMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 });
+            [-0.14, 0.14].forEach(ay => {
+                const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.032, 0.55, 8), antMat);
+                ant.rotation.z = Math.PI / 2.3;
+                ant.position.set(-0.88, ay + 0.1, 0);
+                group.add(ant);
+            });
+
+            // Gold PCIe x1 connector pins
+            const pins = new THREE.Mesh(
+                new THREE.BoxGeometry(0.55, 0.14, 0.05),
+                new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.85, roughness: 0.25 })
+            );
+            pins.position.set(-0.05, -0.36, 0);
+            group.add(pins);
+
+            return group;
+        }
+
+        function createHDDMesh() {
+            const group = new THREE.Group();
+            // Sturdy black enclosure body
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(1.42, 0.28, 2.02),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.45 })
+            );
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+
+            // Brushed metallic top lid with HDD label
+            const hddTex = createLabelTexture('SATA HDD', '2TB 7200 RPM', '#e2e8f0', '#0f172a');
+            const lid = new THREE.Mesh(
+                new THREE.BoxGeometry(1.28, 0.03, 1.84),
+                new THREE.MeshStandardMaterial({ map: hddTex, metalness: 0.4, roughness: 0.35 })
+            );
+            lid.position.y = 0.145;
+            group.add(lid);
+
+            return group;
+        }
+
+        function buildComponents() {
+            if (typeof THREE.GLTFLoader === 'undefined') {
+                showToast('Pemuat model 3D tidak tersedia.', 'rose');
+                return;
+            }
+
+            const loader = new THREE.GLTFLoader();
+            COMPONENT_DEFS.forEach(def => {
+                const compObj = {
+                    ...def,
+                    mesh: null,
+                    installed: false
+                };
+                components.push(compObj);
+
+                loader.load(
+                    def.assetFile,
+                    gltf => {
+                        const mesh = gltf.scene;
+                        const box = new THREE.Box3().setFromObject(mesh);
+                        const size = box.getSize(new THREE.Vector3());
+                        const center = box.getCenter(new THREE.Vector3());
+
+                        if (def.scaleByAxis) {
+                            mesh.scale.set(
+                                def.scaleByAxis.x,
+                                def.scaleByAxis.y,
+                                def.scaleByAxis.z
+                            );
+                        } else if (def.preserveAspect) {
+                            const sourceLongest = Math.max(size.x, size.y, size.z);
+                            const targetLongest = def.targetSize.x;
+                            const scale = sourceLongest > 0 ? targetLongest / sourceLongest : 1;
+                            mesh.scale.setScalar(scale);
+                        } else {
+                            mesh.scale.set(
+                                size.x > 0 ? def.targetSize.x / size.x : 1,
+                                size.y > 0 ? def.targetSize.y / size.y : 1,
+                                size.z > 0 ? def.targetSize.z / size.z : 1
+                            );
+                        }
+                        mesh.position.set(
+                            -center.x * mesh.scale.x,
+                            -center.y * mesh.scale.y,
+                            -center.z * mesh.scale.z
+                        );
+                        if (def.modelRotation) {
+                            mesh.rotation.copy(def.modelRotation);
+                        }
+
+                        const wrapper = new THREE.Group();
+                        wrapper.add(mesh);
+                        wrapper.position.copy(def.trayPos);
+                        wrapper.rotation.copy(def.trayRot);
+                        mesh.traverse(child => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                child.userData.compId = def.id;
+                                interactableMeshes.push(child);
+                            }
+                        });
+
+                        scene.add(wrapper);
+                        compObj.mesh = wrapper;
+                    },
+                    undefined,
+                    () => showToast(`Gagal memuat model ${def.name}.`, 'rose')
+                );
+            });
+        }
+
+        /* =====================================================================
+         * VISUAL 3D SLOT PLACEMENT INDICATORS
+         * ===================================================================== */
+        function buildSlotIndicators() {
+            COMPONENT_DEFS.forEach(def => {
+                const group = new THREE.Group();
+                group.position.copy(def.slotPos);
+                group.visible = false;
+
+                const [w, h, d] = def.indicatorSize;
+                // Translucent glowing emerald bounding box
+                const boxGeo = new THREE.BoxGeometry(w, h, d);
+                const boxMat = new THREE.MeshBasicMaterial({
+                    color: 0x10b981,
+                    transparent: true,
+                    opacity: 0.24,
+                    depthWrite: false
+                });
+                const fillMesh = new THREE.Mesh(boxGeo, boxMat);
+                group.add(fillMesh);
+
+                // Crisp glowing wireframe outline
+                const edges = new THREE.EdgesGeometry(boxGeo);
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.95 });
+                const wire = new THREE.LineSegments(edges, lineMat);
+                group.add(wire);
+
+                scene.add(group);
+                slotIndicators[def.id] = { group, fillMesh, wire };
+            });
+        }
+
+        const assemblyPoints = [
+            { number: 1, compId: 'cpu', position: new THREE.Vector3(-0.9, 0.58, -0.75) },
+            { number: 2, compId: 'ram', position: new THREE.Vector3(0.85, 0.90, -0.75) },
+            { number: 3, compId: 'ssd', position: new THREE.Vector3(-0.55, 0.58, 0.42) },
+            { number: 4, compId: 'gpu', position: new THREE.Vector3(-1.0, 0.95, 1.25) },
+            { number: 5, compId: 'expansion', position: new THREE.Vector3(-1.55, 0.90, 2.15) },
+            { number: 6, compId: 'hdd', position: new THREE.Vector3(4.15, 0.58, 0.85) },
+            { number: 7, compId: null, position: new THREE.Vector3(2.75, 0.58, -0.75) },
+            { number: 8, compId: null, position: new THREE.Vector3(2.72, 0.58, 0.65) },
+            { number: 9, compId: 'psu', position: new THREE.Vector3(2.55, 0.90, -1.85) }
+        ];
+
+        function buildAssemblyPoints() {
+            const layer = document.getElementById('assembly-point-layer');
+            layer.querySelectorAll('.assembly-point').forEach(button => {
+                button.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const pointNumber = Number(button.dataset.point);
+                    attachSelectedToPoint(pointNumber);
+                });
+            });
+        }
+
+        /* =====================================================================
+         * CAMERA CONTROLLER (Orbit, Zoom, Pan with Strict Tabletop Bounds)
+         * ===================================================================== */
+        function updateCameraTransform() {
+            const sinPhi = Math.sin(camState.phi);
+            const x = camState.target.x + camState.radius * sinPhi * Math.sin(camState.theta);
+            const y = camState.target.y + camState.radius * Math.cos(camState.phi);
+            const z = camState.target.z + camState.radius * sinPhi * Math.cos(camState.theta);
+
+            camera.position.set(x, Math.max(0.65, y), z);
+            camera.lookAt(camState.target);
+        }
+
+        function resetCamera() {
+            camState.desiredTarget.copy(DEFAULT_CAM.target);
+            camState.desiredRadius = getDefaultCameraRadius();
+            camState.desiredTheta = DEFAULT_CAM.theta;
+            camState.desiredPhi = DEFAULT_CAM.phi;
+            showToast('Kamera dikembalikan ke tampilan meja kerja awal', 'sky');
+        }
+
+        function clampCameraTargets() {
+            camState.desiredPhi = THREE.MathUtils.clamp(camState.desiredPhi, CAM_LIMITS.minPhi, CAM_LIMITS.maxPhi);
+            camState.desiredRadius = THREE.MathUtils.clamp(camState.desiredRadius, CAM_LIMITS.minRadius, CAM_LIMITS.maxRadius);
+            camState.desiredTarget.x = THREE.MathUtils.clamp(camState.desiredTarget.x, CAM_LIMITS.minX, CAM_LIMITS.maxX);
+            camState.desiredTarget.z = THREE.MathUtils.clamp(camState.desiredTarget.z, CAM_LIMITS.minZ, CAM_LIMITS.maxZ);
+        }
+
+        /* =====================================================================
+         * COMPONENT PICKUP, DRAGGING, INSTALLATION & REMOVAL
+         * ===================================================================== */
+        function updatePointerCoords(clientX, clientY) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+        }
+
+        function raycastComponent(clientX, clientY) {
+            updatePointerCoords(clientX, clientY);
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(interactableMeshes, false);
+            if (hits.length > 0) {
+                const compId = hits[0].object.userData.compId;
+                return components.find(c => c.id === compId) || null;
+            }
+            return null;
+        }
+
+        function setComponentHighlight(comp, active) {
+            if (!comp) return;
+            comp.mesh.traverse(child => {
+                if (child.isMesh && child.material && child.material.emissive) {
+                    if (active) {
+                        if (!child.userData.origEmissive) {
+                            child.userData.origEmissive = child.material.emissive.clone();
+                        }
+                        child.material.emissive.setHex(0x1d4ed8);
+                        child.material.emissiveIntensity = 0.45;
+                    } else if (child.userData.origEmissive) {
+                        child.material.emissive.copy(child.userData.origEmissive);
+                        child.material.emissiveIntensity = 1.0;
+                    }
+                }
+            });
+        }
+
+        function startDraggingComponent(comp, clientX, clientY) {
+            draggedComp = comp;
+            isNearCorrectSlot = false;
+
+            // If component was installed, detach it back into a movable state
+            if (comp.installed) {
+                comp.installed = false;
+                playSound('remove');
+                updateProgressUI();
+                showToast(`${comp.shortName} dilepas — geser ke baki atau pasang kembali`, 'amber');
+            } else {
+                playSound('pickup');
+            }
+
+            // Cancel any ongoing snap animation for this part
+            for (let i = activeAnimations.length - 1; i >= 0; i--) {
+                if (activeAnimations[i].comp === comp) activeAnimations.splice(i, 1);
+            }
+
+            // Set horizontal drag plane at this component's elevated lift height
+            dragPlane.constant = -comp.dragHeight;
+            updatePointerCoords(clientX, clientY);
+            raycaster.setFromCamera(pointer, camera);
+
+            if (raycaster.ray.intersectPlane(dragPlane, dragIntersection)) {
+                dragOffset.set(
+                    comp.mesh.position.x - dragIntersection.x,
+                    0,
+                    comp.mesh.position.z - dragIntersection.z
+                );
+            } else {
+                dragOffset.set(0, 0, 0);
+            }
+
+            // Orient part into its installation orientation while held
+            comp.mesh.position.y = comp.dragHeight;
+            comp.mesh.rotation.copy(comp.slotRot);
+
+            updateInfoCard(comp);
+            document.getElementById('canvas-container').classList.add('dragging-part');
+            hideTooltip();
+        }
+
+        function moveDraggedComponent(clientX, clientY) {
+            if (!draggedComp) return;
+
+            updatePointerCoords(clientX, clientY);
+            raycaster.setFromCamera(pointer, camera);
+
+            if (raycaster.ray.intersectPlane(dragPlane, dragIntersection)) {
+                const nextX = THREE.MathUtils.clamp(dragIntersection.x + dragOffset.x, -8.5, 8.2);
+                const nextZ = THREE.MathUtils.clamp(dragIntersection.z + dragOffset.z, -4.8, 4.8);
+                draggedComp.mesh.position.set(nextX, draggedComp.dragHeight, nextZ);
+
+                // Check proximity to correct motherboard slot (XZ distance)
+                const dx = nextX - draggedComp.slotPos.x;
+                const dz = nextZ - draggedComp.slotPos.z;
+                const dist = Math.hypot(dx, dz);
+
+                const indicator = slotIndicators[draggedComp.id];
+                if (dist < draggedComp.snapRadius) {
+                    isNearCorrectSlot = true;
+                    indicator.group.visible = true;
+                    indicator.fillMesh.material.color.setHex(0x10b981);
+                    indicator.wire.material.color.setHex(0x34d399);
+                } else if (dist < draggedComp.snapRadius * 2.1) {
+                    // Subtle sky-blue guide when getting close to the right region
+                    isNearCorrectSlot = false;
+                    indicator.group.visible = true;
+                    indicator.fillMesh.material.color.setHex(0x38bdf8);
+                    indicator.wire.material.color.setHex(0x7dd3fc);
+                } else {
+                    isNearCorrectSlot = false;
+                    indicator.group.visible = false;
+                }
+            }
+        }
+
+        function releaseDraggedComponent() {
+            if (!draggedComp) return;
+            const comp = draggedComp;
+            draggedComp = null;
+
+            // Hide placement indicator
+            slotIndicators[comp.id].group.visible = false;
+            document.getElementById('canvas-container').classList.remove('dragging-part');
+
+            if (isNearCorrectSlot) {
+                // Smoothly install and attach to the motherboard!
+                comp.installed = true;
+                xpState.installedEver.add(comp.id);
+                updateLiveXP();
+                animateComponentTo(comp, comp.slotPos, comp.slotRot, 220);
+                playSound('snap');
+                showToast(`Mantap! ${comp.name} terpasang (+${XP_RULES.perAssembly} XP)!`, 'emerald');
+                updateProgressUI();
+                updateInfoCard(comp);
+
+                // Tandai jika ini komponen terakhir agar modal selesai muncul setelah pop-up edukasi ditutup
+                const allInstalled = components.every(c => c.installed);
+                if (allInstalled && !completionShown) {
+                    pendingCompletionModal = true;
+                }
+
+                // Tampilkan pop-up edukasi fungsi & peran sehari-hari komponen
+                setTimeout(() => showEduModal(comp), 260);
+            } else {
+                // Return cleanly to its compartment in the parts tray
+                comp.installed = false;
+                animateComponentTo(comp, comp.trayPos, comp.trayRot, 280);
+                showToast(`${comp.shortName} dikembalikan ke baki komponen`, 'sky');
+                updateProgressUI();
+                updateInfoCard(comp);
+            }
+            isNearCorrectSlot = false;
+        }
+
+        function animateComponentTo(comp, targetPos, targetRot, durationMs) {
+            activeAnimations.push({
+                comp,
+                startPos: comp.mesh.position.clone(),
+                endPos: targetPos.clone(),
+                startQuat: comp.mesh.quaternion.clone(),
+                endQuat: new THREE.Quaternion().setFromEuler(targetRot),
+                startTime: performance.now(),
+                duration: durationMs
+            });
+        }
+
+        function resetAllParts() {
+            completionShown = false;
+            pendingCompletionModal = false;
+            currentEduCompId = null;
+            selectedComp = null;
+            document.getElementById('rotation-toolbar').style.display = 'none';
+            xpState.installedEver.clear();
+            xpState.readInfoEver.clear();
+            updateLiveXP();
+            document.getElementById('completion-modal').classList.add('hidden');
+            document.getElementById('completion-modal').classList.remove('flex');
+            document.getElementById('edu-modal').classList.add('hidden');
+            document.getElementById('edu-modal').classList.remove('flex');
+
+            components.forEach(comp => {
+                comp.installed = false;
+                slotIndicators[comp.id].group.visible = false;
+                animateComponentTo(comp, comp.trayPos, comp.trayRot, 350);
+            });
+            playSound('remove');
+            updateProgressUI();
+            showToast('Semua komponen dikembalikan ke baki komponen', 'amber');
+        }
+
+        /* =====================================================================
+         * UI UPDATES, POP-UP EDUKASI, EVALUASI, XP, TOOLTIP, CHECKLIST & TOAST
+         * ===================================================================== */
+        function getTotalXP() {
+            return (
+                xpState.installedEver.size * XP_RULES.perAssembly +
+                xpState.readInfoEver.size * XP_RULES.perReading
+            );
+        }
+
+        function updateLiveXP() {
+            const badge = document.getElementById('live-xp-badge');
+            if (badge) {
+                badge.textContent = `${getTotalXP()} XP`;
+            }
+        }
+
+        function showEduModal(comp) {
+            currentEduCompId = comp.id;
+            const modal = document.getElementById('edu-modal');
+            const header = document.getElementById('edu-header');
+            const slotBadge = document.getElementById('edu-slot-badge');
+            const title = document.getElementById('edu-title');
+            const funcEl = document.getElementById('edu-function');
+            const dailyEl = document.getElementById('edu-daily');
+
+            header.className = `p-5 bg-gradient-to-r ${comp.theme.headerGrad} text-white relative`;
+            slotBadge.textContent = `Terpasang di ${comp.slotName}`;
+            title.textContent = comp.name;
+            funcEl.textContent = comp.functionText;
+            dailyEl.textContent = comp.dailyLifeText;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEduModal() {
+            const modal = document.getElementById('edu-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            // Tambahkan XP membaca informasi jika belum pernah tercatat untuk komponen ini
+            if (currentEduCompId && !xpState.readInfoEver.has(currentEduCompId)) {
+                xpState.readInfoEver.add(currentEduCompId);
+                updateLiveXP();
+                showToast(`Info komponen selesai dibaca (+${XP_RULES.perReading} XP)!`, 'sky');
+            }
+            currentEduCompId = null;
+
+            if (pendingCompletionModal && !completionShown) {
+                pendingCompletionModal = false;
+                checkCompletion();
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(message, tone = 'sky') {
+            const banner = document.getElementById('toast-banner');
+            if (!banner) return;
+
+            const toneClasses = {
+                sky: 'bg-gradient-to-r from-sky-500 to-indigo-600',
+                emerald: 'bg-gradient-to-r from-emerald-500 to-teal-600',
+                amber: 'bg-gradient-to-r from-amber-500 to-orange-500',
+                rose: 'bg-gradient-to-r from-rose-500 to-pink-600'
+            };
+
+            banner.className = `fixed top-20 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-2xl shadow-2xl text-xs sm:text-sm font-bold text-white border border-white/30 pointer-events-none transition-all duration-300 text-center max-w-[90vw] ${toneClasses[tone] || toneClasses.sky}`;
+            banner.textContent = message;
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 3000);
+        }
+
+        function renderChecklist() {
+            const panel = document.getElementById('checklist-panel');
+            if (!panel) return;
+            panel.innerHTML = '';
+
+            components.forEach(comp => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `px-2.5 py-1.5 rounded-xl border text-[11px] font-extrabold transition-all flex items-center gap-1.5 active:scale-95 ${
+                    comp.installed ? comp.theme.chipDone : comp.theme.chipIdle
+                }`;
+                btn.innerHTML = `
+                    <span class="w-2 h-2 rounded-full shrink-0 ${comp.installed ? 'bg-white' : comp.theme.dot}"></span>
+                    <span class="truncate">${comp.shortName}</span>
+                    ${comp.installed ? '<span class="ml-auto text-[10px]">&#10003;</span>' : ''}
+                `;
+                btn.title = comp.installed
+                    ? `${comp.name} sudah terpasang — klik untuk baca ulang infonya`
+                    : `Pilih titik bernomor untuk memasang ${comp.name}`;
+
+                btn.addEventListener('click', () => {
+                    updateInfoCard(comp);
+                    if (comp.installed) {
+                        showEduModal(comp);
+                    } else {
+                        showToast(`Ambil ${comp.shortName} di baki kiri lalu pasang ke ${comp.slotName}`, 'sky');
+                    }
+                });
+
+                panel.appendChild(btn);
+            });
+        }
+
+        function updateProgressUI() {
+            const installedCount = components.filter(c => c.installed).length;
+            const total = components.length;
+            const pct = total > 0 ? Math.round((installedCount / total) * 100) : 0;
+
+            const bar = document.getElementById('progress-bar');
+            const text = document.getElementById('progress-text');
+            if (bar) bar.style.width = `${pct}%`;
+            if (text) text.textContent = `${installedCount} / ${total} Terpasang`;
+
+            renderChecklist();
+        }
+
+        function selectComponent(comp) {
+            if (!comp || !comp.mesh) return;
+            selectedComp = comp;
+            setComponentHighlight(hoveredComp, false);
+            setComponentHighlight(comp, true);
+            hoveredComp = comp;
+            updateInfoCard(comp);
+            updateRotationToolbar();
+            showToast(`${comp.shortName} dipilih — pilih titik bernomor untuk memasangnya`, 'sky');
+            playSound('pickup');
+        }
+
+        function updateRotationToolbar() {
+            const toolbar = document.getElementById('rotation-toolbar');
+            if (!selectedComp) {
+                toolbar.style.display = 'none';
+                return;
+            }
+
+            const worldPosition = new THREE.Vector3();
+            selectedComp.mesh.getWorldPosition(worldPosition);
+            worldPosition.y += selectedComp.indicatorSize ? 1.2 : 0.8;
+            worldPosition.project(camera);
+
+            const x = (worldPosition.x * 0.5 + 0.5) * document.body.clientWidth;
+            const y = (-worldPosition.y * 0.5 + 0.5) * document.body.clientHeight;
+            toolbar.style.left = `${x}px`;
+            toolbar.style.top = `${y}px`;
+            toolbar.style.display = 'flex';
+        }
+
+        function rotateSelected(axis, direction) {
+            if (!selectedComp || !selectedComp.mesh) return;
+            const step = Math.PI / 8 * direction;
+            if (axis === 'x') selectedComp.mesh.rotation.x += step;
+            if (axis === 'y') selectedComp.mesh.rotation.y += step;
+            updateRotationToolbar();
+        }
+
+        function attachSelectedToPoint(pointNumber) {
+            if (!selectedComp) {
+                showToast('Pilih komponen dahulu dari baki', 'sky');
+                return;
+            }
+
+            const point = assemblyPoints.find(item => item.number === pointNumber);
+            if (!point) return;
+
+            if (point.compId === selectedComp.id) {
+                selectedComp.installed = true;
+                xpState.installedEver.add(selectedComp.id);
+                animateComponentTo(selectedComp, selectedComp.slotPos, selectedComp.slotRot, 220);
+                playSound('snap');
+                showToast(`Mantap! ${selectedComp.name} terpasang (+${XP_RULES.perAssembly} XP)!`, 'emerald');
+                updateProgressUI();
+                updateInfoCard(selectedComp);
+
+                const allInstalled = components.every(comp => comp.installed);
+                if (allInstalled && !completionShown) pendingCompletionModal = true;
+                setTimeout(() => showEduModal(selectedComp), 260);
+            } else {
+                selectedComp.installed = false;
+                animateComponentTo(selectedComp, selectedComp.trayPos, selectedComp.trayRot, 280);
+                playSound('remove');
+                showToast('Titik itu belum cocok — coba titik lain', 'amber');
+                updateInfoCard(selectedComp);
+            }
+
+            updateProgressUI();
+            updateRotationToolbar();
+        }
+
+        function updateInfoCard(comp) {
+            if (!comp) return;
+            const card = document.getElementById('info-card');
+            const nameEl = document.getElementById('info-name');
+            const slotEl = document.getElementById('info-slot');
+            const descEl = document.getElementById('info-desc');
+            const badgeEl = document.getElementById('info-status-badge');
+
+            if (card) {
+                card.className = `glass-panel rounded-2xl p-3.5 shadow-2xl max-w-sm w-full pointer-events-auto border-2 transition-colors ${comp.theme.cardBorder}`;
+            }
+            if (nameEl) nameEl.textContent = comp.name;
+            if (slotEl) slotEl.textContent = comp.installed ? 'Komponen sudah terpasang' : 'Pilih titik bernomor untuk memasangnya';
+            if (descEl) descEl.textContent = comp.description;
+            if (badgeEl) {
+                badgeEl.textContent = comp.installed ? 'Terpasang' : 'Di Baki';
+                badgeEl.className = comp.installed
+                    ? 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white shrink-0'
+                    : `text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r ${comp.theme.badgeGrad} text-white shrink-0`;
+            }
+        }
+
+        function checkCompletion() {
+            const allInstalled = components.every(c => c.installed);
+            if (allInstalled && !completionShown) {
+                completionShown = true;
+                setTimeout(() => {
+                    playSound('complete');
+                    const modal = document.getElementById('completion-modal');
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }, 220);
+            }
+        }
+
+        function showTooltip(comp, x, y) {
+            const tip = document.getElementById('hover-tooltip');
+            const nameEl = document.getElementById('tooltip-name');
+            const statusEl = document.getElementById('tooltip-status');
+            nameEl.textContent = comp.name;
+            statusEl.textContent = comp.installed ? 'Terpasang' : 'Di Baki';
+            statusEl.className = comp.installed
+                ? 'ml-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
+                : `ml-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r ${comp.theme.badgeGrad} text-white`;
+            tip.style.left = `${x}px`;
+            tip.style.top = `${y}px`;
+            tip.classList.remove('hidden');
+        }
+
+        function hideTooltip() {
+            document.getElementById('hover-tooltip').classList.add('hidden');
+        }
+
+        /* =====================================================================
+         * INPUT & EVENT LISTENERS (Mouse + Touch Support)
+         * ===================================================================== */
+        function setupEventListeners() {
+            const dom = renderer.domElement;
+            const container = document.getElementById('canvas-container');
+
+            // Prevent context menu so right-click can comfortably rotate the workbench
+            dom.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Mouse Down
+            dom.addEventListener('mousedown', e => {
+                initAudio();
+                // Left click on a component picks it up
+                if (e.button === 0 && !e.shiftKey) {
+                    const hitComp = raycastComponent(e.clientX, e.clientY);
+                    if (hitComp) {
+                        selectComponent(hitComp);
+                        return;
+                    }
+                }
+
+                // Otherwise control the camera (Pan on Middle click or Shift+Left; Orbit on Left/Right)
+                if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+                    camState.isPanning = true;
+                } else {
+                    camState.isOrbiting = true;
+                }
+                camState.lastX = e.clientX;
+                camState.lastY = e.clientY;
+                container.classList.add('dragging-camera');
+            });
+
+            // Mouse Move
+            window.addEventListener('mousemove', e => {
+                if (draggedComp) {
+                    moveDraggedComponent(e.clientX, e.clientY);
+                    return;
+                }
+
+                if (camState.isOrbiting) {
+                    const dx = e.clientX - camState.lastX;
+                    const dy = e.clientY - camState.lastY;
+                    camState.desiredTheta -= dx * 0.0065;
+                    camState.desiredPhi -= dy * 0.0065;
+                    clampCameraTargets();
+                    camState.lastX = e.clientX;
+                    camState.lastY = e.clientY;
+                    hideTooltip();
+                    return;
+                }
+
+                if (camState.isPanning) {
+                    const dx = e.clientX - camState.lastX;
+                    const dy = e.clientY - camState.lastY;
+                    const panSpeed = camState.radius * 0.0014;
+                    const sinT = Math.sin(camState.theta);
+                    const cosT = Math.cos(camState.theta);
+
+                    camState.desiredTarget.x -= (dx * cosT + dy * sinT) * panSpeed;
+                    camState.desiredTarget.z -= (-dx * sinT + dy * cosT) * panSpeed;
+                    clampCameraTargets();
+                    camState.lastX = e.clientX;
+                    camState.lastY = e.clientY;
+                    hideTooltip();
+                    return;
+                }
+
+                // Hover detection when not dragging
+                const hitComp = raycastComponent(e.clientX, e.clientY);
+                if (hitComp !== hoveredComp) {
+                    setComponentHighlight(hoveredComp, false);
+                    hoveredComp = hitComp;
+                    setComponentHighlight(hoveredComp, true);
+                }
+
+                if (hoveredComp) {
+                    container.classList.add('hover-part');
+                    showTooltip(hoveredComp, e.clientX, e.clientY);
+                    updateInfoCard(hoveredComp);
+                } else {
+                    container.classList.remove('hover-part');
+                    hideTooltip();
+                }
+            });
+
+            // Mouse Up
+            window.addEventListener('mouseup', () => {
+                if (draggedComp) releaseDraggedComponent();
+                camState.isOrbiting = false;
+                camState.isPanning = false;
+                container.classList.remove('dragging-camera');
+            });
+
+            // Scroll Wheel Zoom
+            dom.addEventListener('wheel', e => {
+                e.preventDefault();
+                camState.desiredRadius += e.deltaY * 0.011;
+                clampCameraTargets();
+            }, { passive: false });
+
+            // Touch Controls (1 finger: drag part or orbit; 2 fingers: pinch zoom & pan)
+            dom.addEventListener('touchstart', e => {
+                initAudio();
+                if (e.touches.length === 1) {
+                    const t = e.touches[0];
+                    const hitComp = raycastComponent(t.clientX, t.clientY);
+                    if (hitComp) {
+                        selectComponent(hitComp);
+                    } else {
+                        camState.isOrbiting = true;
+                        camState.lastX = t.clientX;
+                        camState.lastY = t.clientY;
+                    }
+                } else if (e.touches.length === 2) {
+                    if (draggedComp) releaseDraggedComponent();
+                    camState.isOrbiting = false;
+                    camState.isPanning = true;
+                    const t0 = e.touches[0], t1 = e.touches[1];
+                    camState.pinchStartDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+                    camState.pinchStartRadius = camState.desiredRadius;
+                    camState.lastX = (t0.clientX + t1.clientX) / 2;
+                    camState.lastY = (t0.clientY + t1.clientY) / 2;
+                }
+            }, { passive: false });
+
+            dom.addEventListener('touchmove', e => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    const t = e.touches[0];
+                    if (draggedComp) {
+                        moveDraggedComponent(t.clientX, t.clientY);
+                    } else if (camState.isOrbiting) {
+                        const dx = t.clientX - camState.lastX;
+                        const dy = t.clientY - camState.lastY;
+                        camState.desiredTheta -= dx * 0.0075;
+                        camState.desiredPhi -= dy * 0.0075;
+                        clampCameraTargets();
+                        camState.lastX = t.clientX;
+                        camState.lastY = t.clientY;
+                    }
+                } else if (e.touches.length === 2 && camState.isPanning) {
+                    const t0 = e.touches[0], t1 = e.touches[1];
+                    const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+                    if (camState.pinchStartDist > 0) {
+                        const ratio = camState.pinchStartDist / dist;
+                        camState.desiredRadius = camState.pinchStartRadius * ratio;
+                    }
+                    const midX = (t0.clientX + t1.clientX) / 2;
+                    const midY = (t0.clientY + t1.clientY) / 2;
+                    const dx = midX - camState.lastX;
+                    const dy = midY - camState.lastY;
+                    const panSpeed = camState.radius * 0.0016;
+                    const sinT = Math.sin(camState.theta);
+                    const cosT = Math.cos(camState.theta);
+                    camState.desiredTarget.x -= (dx * cosT + dy * sinT) * panSpeed;
+                    camState.desiredTarget.z -= (-dx * sinT + dy * cosT) * panSpeed;
+                    clampCameraTargets();
+                    camState.lastX = midX;
+                    camState.lastY = midY;
+                }
+            }, { passive: false });
+
+            dom.addEventListener('touchend', () => {
+                if (draggedComp) releaseDraggedComponent();
+                camState.isOrbiting = false;
+                camState.isPanning = false;
+            });
+
+            // Responsive Resize
+            window.addEventListener('resize', () => {
+                const nextCompactLandscape = isCompactLandscape();
+                if (nextCompactLandscape !== compactLandscape) {
+                    camState.desiredRadius = getDefaultCameraRadius();
+                    compactLandscape = nextCompactLandscape;
+                }
+                camera.aspect = document.body.clientWidth / document.body.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(document.body.clientWidth, document.body.clientHeight);
+            });
+
+            // HUD Button Actions
+            document.getElementById('btn-reset-camera').addEventListener('click', resetCamera);
+            document.getElementById('btn-reset-parts').addEventListener('click', resetAllParts);
+            document.getElementById('btn-music').addEventListener('click', toggleMusic);
+
+            document.querySelectorAll('#rotation-toolbar button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const action = button.dataset.rotate;
+                    if (action === 'left') rotateSelected('y', -1);
+                    if (action === 'right') rotateSelected('y', 1);
+                    if (action === 'up') rotateSelected('x', -1);
+                    if (action === 'down') rotateSelected('x', 1);
+                });
+            });
+
+            document.getElementById('btn-sound').addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                document.getElementById('icon-sound-on').classList.toggle('hidden', !soundEnabled);
+                document.getElementById('icon-sound-off').classList.toggle('hidden', soundEnabled);
+                showToast(soundEnabled ? 'Efek suara diaktifkan' : 'Efek suara dimatikan', 'sky');
+            });
+
+            document.getElementById('btn-toggle-checklist').addEventListener('click', () => {
+                const panel = document.getElementById('checklist-panel');
+                const btn = document.getElementById('btn-toggle-checklist');
+                const isHidden = panel.classList.toggle('hidden');
+                btn.textContent = isHidden ? 'Tampilkan' : 'Sembunyikan';
+            });
+
+            document.getElementById('btn-edu-close').addEventListener('click', closeEduModal);
+
+            const closeCompletionModal = () => {
+                const modal = document.getElementById('completion-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+            document.getElementById('btn-modal-inspect-early').addEventListener('click', closeCompletionModal);
+            document.getElementById('btn-modal-inspect').addEventListener('click', closeCompletionModal);
+
+            document.getElementById('btn-modal-restart').addEventListener('click', resetAllParts);
+        }
+
+        /* =====================================================================
+         * MAIN ANIMATION LOOP
+         * ===================================================================== */
+        function animate(now) {
+            requestAnimationFrame(animate);
+
+            // 1. Smoothly damp camera orbit, zoom, and pan
+            const damp = 0.12;
+            camState.theta += (camState.desiredTheta - camState.theta) * damp;
+            camState.phi += (camState.desiredPhi - camState.phi) * damp;
+            camState.radius += (camState.desiredRadius - camState.radius) * damp;
+            camState.target.lerp(camState.desiredTarget, damp);
+            updateCameraTransform();
+
+            assemblyPoints.forEach(point => {
+                const button = document.querySelector(`.assembly-point[data-point="${point.number}"]`);
+                if (!button) return;
+                const projected = point.position.clone().project(camera);
+                const inside = projected.z > -1 && projected.z < 1;
+                const x = (projected.x * 0.5 + 0.5) * document.body.clientWidth;
+                const y = (-projected.y * 0.5 + 0.5) * document.body.clientHeight;
+                button.style.left = `${x}px`;
+                button.style.top = `${y}px`;
+                button.style.display = inside ? 'grid' : 'none';
+            });
+            updateRotationToolbar();
+
+            // 2. Process component snap/return animations
+            for (let i = activeAnimations.length - 1; i >= 0; i--) {
+                const anim = activeAnimations[i];
+                const t = Math.min(1, (now - anim.startTime) / anim.duration);
+                const ease = 1 - Math.pow(1 - t, 3); // Cubic ease-out
+                anim.comp.mesh.position.lerpVectors(anim.startPos, anim.endPos, ease);
+                anim.comp.mesh.quaternion.copy(anim.startQuat).slerp(anim.endQuat, ease);
+                if (t >= 1) activeAnimations.splice(i, 1);
+            }
+
+            // 3. Subtle pulsing on active slot placement indicators
+            const pulse = 0.18 + Math.sin(now * 0.007) * 0.09;
+            Object.values(slotIndicators).forEach(ind => {
+                if (ind.group.visible) {
+                    ind.fillMesh.material.opacity = pulse;
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Start simulation after window load
+        window.onload = function () {
+            initScene();
+            requestAnimationFrame(animate);
+            showToast('Pilih komponen, atur rotasi, lalu klik titik bernomor.', 'sky');
+        };
+    </script>
+    <div class="orientation-gate" role="status" aria-live="polite">
+        <p>Putar perangkat Anda ke posisi horizontal untuk melanjutkan.</p>
+    </div>
+</body>
+</html>

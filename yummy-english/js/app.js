@@ -36,13 +36,58 @@
     const savedState = JSON.parse(sessionStorage.getItem(stateKey) || '{}');
     let currentQuiz = Array.isArray(savedState.currentQuiz) ? savedState.currentQuiz : [];
     let currentQuestionIndex = Number.isInteger(savedState.currentQuestionIndex) ? savedState.currentQuestionIndex : 0;
-    const maxQuestions = 10;
+    let studentName = typeof savedState.studentName === 'string' ? savedState.studentName : '';
+    const quizLengths = { listening: 10, speaking: 10, writing: 10 };
+    const maxQuestions = quizLengths.speaking;
+    const preparedListeningItems = [
+        { id: 'burger' },
+        { id: 'chicken_noodle_soup' },
+        { id: 'chicken_katsu' },
+        { id: 'french_fries' },
+        { id: 'fried_noodles' },
+        { id: 'garlic_bread' },
+        { id: 'green_salad' },
+        { id: 'iced_milk' },
+        { id: 'iced_tea' },
+        { id: 'orange_juice' },
+        { id: 'spring_roll' },
+        { id: 'strawberry_milk' }
+    ];
     let currentTarget = null;
+    let listeningAudio = null;
+    let menuAudio = null;
     let scores = { listening: 0, speaking: 0, writing: 0, ...savedState.scores };
     const currentPage = document.body.dataset.page;
 
+    function getListeningQuiz() {
+        return preparedListeningItems
+            .map(item => vocabulary.find(v => v.id === item.id))
+            .filter(Boolean);
+    }
+
+    function getListeningAudioUrl(item) {
+        const fileMap = {
+            burger: 'listening_burger',
+            chicken_noodle_soup: 'listening_chickennoodlesoup',
+            chicken_katsu: 'listening_chickenkatsu',
+            french_fries: 'listening_frenchfries',
+            fried_noodles: 'listening_friednoodles',
+            garlic_bread: 'listening_garlicbread',
+            green_salad: 'listening_greensalad',
+            iced_milk: 'listenig_icedmilk',
+            iced_tea: 'listening_iced tea',
+            orange_juice: 'listening_orangejuice',
+            spring_roll: 'listening_springroll',
+            strawberry_milk: 'listening_strawberry milk'
+        };
+
+        const fileName = fileMap[item.id];
+        if (!fileName) return '';
+        return `../assets/audio/${encodeURIComponent(fileName)}.mp3`;
+    }
+
     function saveState() {
-        sessionStorage.setItem(stateKey, JSON.stringify({ currentQuiz, currentQuestionIndex, scores }));
+        sessionStorage.setItem(stateKey, JSON.stringify({ currentQuiz, currentQuestionIndex, scores, studentName }));
     }
 
     // --- Navigation & Modals ---
@@ -76,6 +121,31 @@
         if (destinations[screenId]) {
             navigateTo(destinations[screenId]);
         }
+    }
+
+    function openStartNameModal() {
+        const modal = document.getElementById('modal-start-name');
+        const nameInput = document.getElementById('student-name-input');
+        if (!modal || !nameInput) return;
+
+        nameInput.value = studentName;
+        modal.style.display = 'flex';
+        nameInput.focus();
+    }
+
+    function startLearning(event) {
+        event.preventDefault();
+        const nameInput = document.getElementById('student-name-input');
+        const name = nameInput.value.trim();
+        if (!name) {
+            nameInput.focus();
+            return;
+        }
+
+        studentName = name;
+        saveState();
+        closeModals();
+        goToScreen('screen-menu');
     }
 
     function openModal(modalId) {
@@ -176,6 +246,19 @@
         }
     }
 
+    let feedbackAudio = null;
+    function playFeedbackAudio(isCorrect) {
+        const soundPath = isCorrect ? '../assets/audio/correct.wav' : '../assets/audio/wrong.mp3';
+        if (!feedbackAudio) feedbackAudio = new Audio();
+        feedbackAudio.pause();
+        feedbackAudio.src = soundPath;
+        feedbackAudio.currentTime = 0;
+        feedbackAudio.volume = 0.8;
+        feedbackAudio.play().catch(error => {
+            console.error(`Gagal memutar audio feedback (${soundPath}):`, error);
+        });
+    }
+
     function showFeedback(isCorrect, text) {
         const modal = document.getElementById('feedback-modal');
         const content = document.getElementById('feedback-content');
@@ -193,6 +276,7 @@
             icon.innerText = '🤔'; title.innerText = 'Oops, Salah!'; title.style.color = '#b91c1c';
         }
         textEl.innerText = text;
+        playFeedbackAudio(isCorrect);
         modal.style.display = 'flex';
     }
 
@@ -202,6 +286,11 @@
 
     // --- Text to Speech (Web Speech API) ---
     function speak(text) {
+        if (currentPage === 'menu') {
+            playMenuAudio(text);
+            return;
+        }
+
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); // stop current
             const utterance = new SpeechSynthesisUtterance(text);
@@ -209,6 +298,46 @@
             utterance.rate = 0.9; // Slightly slower for kids
             window.speechSynthesis.speak(utterance);
         }
+    }
+
+    function playMenuAudio(text) {
+        const fileMap = {
+            'spring roll': 'a spring roll',
+            'vegetable salad': 'a vegetable salad',
+            'fried tofu': 'a fried tofu',
+            'fried rice': 'a fried rice',
+            'grilled chicken': 'a grilled chicken',
+            'meatball soup': 'a meatball soup',
+            burger: 'a burger',
+            'spaghetti bolognese': 'a spaghetti',
+            'chicken noodle soup': 'a chicken noodles soup',
+            'fried noodles': 'a fried noodles',
+            'chicken katsu': 'a chicken katsu',
+            'chicken satay': 'a chicken satay',
+            'french fries': 'a french fries',
+            'garlic bread': 'a garlic bread',
+            'green salad': 'a green salad',
+            'chocolate pudding': 'a chocolate puding',
+            'ice cream': 'a ice cream',
+            'fruit salad': 'a fruit salad',
+            'iced tea': 'a iced tea',
+            'orange juice': 'a orange juice',
+            'strawberry milk': 'a strawberry milk',
+            'chocolate drink': 'a chocolate drink',
+            'iced milk': 'a iced milk',
+            'hot tea': 'a hot tea'
+        };
+        const fileName = fileMap[text];
+        if (!fileName) throw new Error(`Audio menu tidak ditemukan untuk: ${text}`);
+
+        const audioPath = `../assets/audio/menu/${encodeURIComponent(fileName)}.mp3`;
+        if (!menuAudio) menuAudio = new Audio();
+        menuAudio.pause();
+        menuAudio.src = audioPath;
+        menuAudio.currentTime = 0;
+        menuAudio.play().catch(error => {
+            console.error(`Gagal memutar audio menu (${audioPath}):`, error);
+        });
     }
 
     // --- Helper Array Shuffle ---
@@ -228,17 +357,28 @@
 
         currentQuestionIndex = 0;
         scores[type] = 0;
-        // Generate 10 random questions from vocabulary
-        currentQuiz = shuffle([...vocabulary]).slice(0, maxQuestions);
+
+        if (type === 'listening') {
+            currentQuiz = shuffle(getListeningQuiz()).slice(0, quizLengths.listening);
+        } else {
+            currentQuiz = shuffle([...vocabulary]).slice(0, quizLengths[type]);
+        }
+
         saveState();
         navigateTo(`${type}.html`);
     }
 
     // --- UJI LISTENING ---
     function initListening() {
-        if(currentQuestionIndex >= maxQuestions) { finishQuiz('Listening', scores.listening); return; }
+        if (listeningAudio) {
+            listeningAudio.pause();
+            listeningAudio = null;
+        }
+
+        const questionCount = quizLengths.listening;
+        if(currentQuestionIndex >= questionCount) { finishQuiz('Listening', scores.listening); return; }
         
-        document.getElementById('list-q-num').innerText = `${currentQuestionIndex + 1}/${maxQuestions}`;
+        document.getElementById('list-q-num').innerText = `${currentQuestionIndex + 1}/${questionCount}`;
         currentTarget = currentQuiz[currentQuestionIndex];
         
         // Generate options (1 correct, 3 random wrong)
@@ -264,33 +404,88 @@
             container.appendChild(btn);
         });
 
-        // Animation for progress bar
-        const bar = document.getElementById('list-audio-bar');
-        bar.style.width = '0%'; bar.style.transition = 'none';
+        const audioPath = getListeningAudioUrl(currentTarget);
+        if (!audioPath) {
+            throw new Error(`Audio listening tidak ditemukan untuk: ${currentTarget.id}`);
+        }
+        listeningAudio = new Audio(audioPath);
+        listeningAudio.addEventListener('timeupdate', updateListeningAudioProgress);
+        listeningAudio.addEventListener('durationchange', updateListeningAudioProgress);
+        listeningAudio.addEventListener('play', updateListeningAudioButton);
+        listeningAudio.addEventListener('pause', updateListeningAudioButton);
+        listeningAudio.addEventListener('ended', updateListeningAudioButton);
+        listeningAudio.addEventListener('error', () => {
+            document.getElementById('list-audio-status').innerText =
+                `Audio ${currentTarget.en} gagal dimuat. Coba putar kembali.`;
+        });
+        updateListeningAudioProgress();
+        updateListeningAudioButton();
 
         // Dots indicator
         const dotsContainer = document.getElementById('list-dots');
         dotsContainer.innerHTML = '';
-        for(let i=0; i<maxQuestions; i++){
+        for(let i=0; i<questionCount; i++){
             dotsContainer.innerHTML += `<div class="w-3 h-3 rounded-full ${i <= currentQuestionIndex ? 'bg-blue-500' : 'bg-gray-300'}"></div>`;
         }
         
         // Auto play
-        setTimeout(() => playListeningAudio(), 500);
+        playListeningAudio();
     }
 
     function playListeningAudio() {
-        speak(currentTarget.en);
-        const bar = document.getElementById('list-audio-bar');
-        bar.style.transition = 'width 1s linear';
-        bar.style.width = '100%';
-        setTimeout(() => { bar.style.transition = 'none'; bar.style.width = '0%'; }, 1000);
+        if (!listeningAudio || !listeningAudio.paused) return;
+        if (listeningAudio.ended) listeningAudio.currentTime = 0;
+        listeningAudio.play().catch(error => {
+            console.error('Gagal memutar audio listening:', error);
+            document.getElementById('list-audio-status').innerText = 'Audio belum bisa diputar. Tekan play untuk mencoba lagi.';
+        });
+    }
+
+    function toggleListeningAudio() {
+        if (!listeningAudio) return;
+        if (listeningAudio.paused) {
+            playListeningAudio();
+        } else {
+            listeningAudio.pause();
+        }
+    }
+
+    function formatAudioTime(seconds) {
+        if (!Number.isFinite(seconds)) return '0:00';
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${remainingSeconds}`;
+    }
+
+    function updateListeningAudioProgress() {
+        if (!listeningAudio) return;
+
+        const duration = Number.isFinite(listeningAudio.duration) ? listeningAudio.duration : 0;
+        const currentTime = listeningAudio.currentTime || 0;
+        const progress = duration ? (currentTime / duration) * 100 : 0;
+        document.getElementById('list-audio-bar').style.width = `${progress}%`;
+        document.getElementById('list-audio-time').innerText =
+            `${formatAudioTime(currentTime)} / ${formatAudioTime(duration)}`;
+    }
+
+    function updateListeningAudioButton() {
+        const button = document.getElementById('list-audio-toggle');
+        const icon = document.getElementById('list-audio-icon');
+        if (!button || !icon || !listeningAudio) return;
+
+        const isPlaying = !listeningAudio.paused;
+        icon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play ml-1';
+        button.setAttribute('aria-label', isPlaying ? 'Jeda audio listening' : 'Putar audio listening');
+        document.getElementById('list-audio-status').innerText = listeningAudio.ended
+            ? 'Audio selesai'
+            : isPlaying ? 'Sedang diputar' : 'Audio dijeda';
     }
 
     let listAnswered = false;
     function checkListening(selectedId, targetId, btnEl) {
         if(listAnswered) return;
         listAnswered = true;
+        if (listeningAudio) listeningAudio.pause();
         
         if(selectedId === targetId) {
             btnEl.classList.add('bg-green-100', 'border-green-500');
@@ -304,7 +499,8 @@
     }
 
     function nextListening() {
-        if(!listAnswered && currentQuestionIndex < maxQuestions) {
+        const questionCount = quizLengths.listening;
+        if(!listAnswered && currentQuestionIndex < questionCount) {
             alert("Pilih jawaban dulu ya!"); return;
         }
         listAnswered = false;
@@ -322,8 +518,8 @@
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 3;
 
         recognition.onstart = function() {
             isRecording = true;
@@ -333,13 +529,23 @@
         };
 
         recognition.onresult = function(event) {
-            const transcript = event.results[0][0].transcript.toLowerCase().replace(/[^a-z\s]/gi, '').trim();
-            const targetWord = currentTarget.en.toLowerCase();
+            if (speakAnswered) return;
+
+            const result = event.results[event.resultIndex];
+            const alternatives = Array.from(result, alternative =>
+                alternative.transcript.toLowerCase().replace(/[^a-z\s]/gi, '').trim()
+            ).filter(Boolean);
             const resEl = document.getElementById('record-result');
-            
-            resEl.innerText = `"${transcript}"`;
-            
-            if (transcript.includes(targetWord) || targetWord.includes(transcript)) {
+            const transcript = alternatives[0] || '';
+
+            resEl.innerText = transcript ? `"${transcript}"` : '';
+            if (!result.isFinal) return;
+
+            const targetWord = currentTarget.en.toLowerCase();
+            const isMatch = alternatives.some(candidate =>
+                candidate.includes(targetWord) || targetWord.includes(candidate)
+            );
+            if (isMatch) {
                 resEl.className = "mt-2 text-lg font-bold text-green-600";
                 scores.speaking++;
                 saveState();
@@ -459,44 +665,28 @@
 
     // --- Finish Quiz ---
     function finishQuiz(type, score) {
+        const totalQuestions = quizLengths[type.toLowerCase()] || maxQuestions;
         alert(`Uji ${type} Selesai!
-Skor kamu: ${score} dari ${maxQuestions}`);
+Skor kamu: ${score} dari ${totalQuestions}`);
         saveState();
         goToScreen('screen-menu');
     }
 
-    function showCertificateScores() {
-        alert(`Selamat!
-Nilai Akhir:
-Listening: ${scores.listening}
-Speaking: ${scores.speaking}
-Writing: ${scores.writing}
-
-(Fitur download PDF sertifikat akan tersedia nanti)`);
-    }
-
     function initCertificate() {
-        const nameInput = document.getElementById('certificate-name');
         const namePreview = document.getElementById('certificate-student-name');
         const scorePreview = document.getElementById('certificate-final-score');
         const datePreview = document.getElementById('certificate-date');
 
-        if (!nameInput || !namePreview || !scorePreview || !datePreview) return;
+        if (!namePreview || !scorePreview || !datePreview) return;
 
-        const updateCertificate = () => {
-            const studentName = nameInput.value.trim() || 'Nama Siswa';
-            const totalScore = Number(scores.listening || 0) + Number(scores.speaking || 0) + Number(scores.writing || 0);
-            namePreview.textContent = studentName;
-            scorePreview.textContent = String(totalScore);
-            datePreview.textContent = new Intl.DateTimeFormat('id-ID', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            }).format(new Date());
-        };
-
-        nameInput.addEventListener('input', updateCertificate);
-        updateCertificate();
+        namePreview.textContent = studentName || 'Nama Siswa';
+        const totalScore = Number(scores.listening || 0) + Number(scores.speaking || 0) + Number(scores.writing || 0);
+        scorePreview.textContent = String(totalScore);
+        datePreview.textContent = new Intl.DateTimeFormat('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }).format(new Date());
     }
 
     function initializePage() {
@@ -504,7 +694,6 @@ Writing: ${scores.writing}
             if (scores.listening > 0 || scores.speaking > 0 || scores.writing > 0) {
                 const certificateButton = document.getElementById('btn-sertifikat');
                 certificateButton.classList.remove('hidden');
-                certificateButton.onclick = showCertificateScores;
             }
             return;
         }
@@ -522,7 +711,8 @@ Writing: ${scores.writing}
         const initializeQuiz = initializers[currentPage];
         if (!initializeQuiz) return;
 
-        if (currentQuiz.length !== maxQuestions) {
+        const expectedQuestions = quizLengths[currentPage] || maxQuestions;
+        if (currentQuiz.length !== expectedQuestions) {
             alert('Mulai kuis dari halaman menu terlebih dahulu ya!');
             goToScreen('screen-menu');
             return;

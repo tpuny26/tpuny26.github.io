@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Latihan Komponen Komputer</title>
+  <style>
+    :root {
+      --ink: #183153;
+      --muted: #617895;
+      --paper: #f2faff;
+      --line: rgba(196, 226, 242, .98);
+      --green: #24b99b;
+      --sky: #52bde8;
+      --violet: #9c87f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      background: url("../asset/BG-all.png") center center / cover no-repeat fixed;
+    }
+
+    body {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: min(100vw, 177.7778dvh);
+      height: min(100dvh, 56.25vw);
+      transform: translate(-50%, -50%);
+      aspect-ratio: 16 / 9;
+      margin: 0;
+      overflow: auto;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell {
+      display: flex;
+      width: min(760px, calc(100% - 32px));
+      min-height: 100dvh;
+      flex-direction: column;
+      justify-content: center;
+      margin: 0 auto;
+      padding: 18px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .topbar a {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .88);
+      padding: 9px 14px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 8px 22px rgba(66, 131, 175, .12);
+      transition: border-color .15s ease, transform .15s ease;
+    }
+
+    .topbar a:hover { border-color: var(--sky); transform: translateY(-1px); }
+    .topbar a:focus-visible,
+    .answer:focus-visible,
+    #next:focus-visible {
+      outline: 3px solid #245fda;
+      outline-offset: 3px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 5vw, 36px);
+      letter-spacing: -.035em;
+      background: linear-gradient(100deg, #43b9e8, #8b7bea 58%, #40c6a9);
+      background-clip: text;
+      color: transparent;
+    }
+
+    .card {
+      border: 1.5px solid var(--line);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .92);
+      padding: clamp(20px, 5vw, 36px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 12px 30px rgba(66, 131, 175, .14);
+    }
+
+    .progress {
+      height: 8px;
+      margin-bottom: 26px;
+      border-radius: 999px;
+      background: #e7f2fa;
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      width: 20%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), var(--sky), var(--violet));
+      transition: width .2s ease;
+    }
+
+    #number {
+      margin: 0 0 8px;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    #question {
+      margin: 0 0 22px;
+      font-size: clamp(18px, 4vw, 24px);
+    }
+
+    .answers {
+      display: grid;
+      gap: 10px;
+    }
+
+    .answer {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .9);
+      padding: 13px 16px;
+      color: var(--ink);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(66, 131, 175, .08);
+      transition: border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .15s ease;
+    }
+
+    .answer:hover:not(:disabled) {
+      border-color: var(--sky);
+      background: #f0fbff;
+      box-shadow: 0 10px 22px rgba(66, 131, 175, .14);
+      transform: translateY(-1px);
+    }
+    .answer.correct { border-color: #4aaf90; background: #edf9f5; }
+    .answer.wrong { border-color: #df8375; background: #fff3f0; }
+    .answer:disabled { cursor: default; }
+
+    #next {
+      display: none;
+      width: 100%;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(100deg, var(--green), var(--sky));
+      padding: 14px 18px;
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(66, 166, 177, .24);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    #next:hover,
+    #restart:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(66, 166, 177, .3);
+    }
+
+    #result { display: none; text-align: center; }
+    #result strong { display: block; font-size: 52px; color: var(--green); }
+
+    .orientation-gate { display: none; }
+
+    @media (max-width: 760px) and (orientation: landscape) {
+      .shell {
+        width: min(100% - 20px, 620px);
+        padding: 10px 0;
+      }
+
+      .topbar { margin-bottom: 10px; }
+      .topbar a { padding: 7px 11px; font-size: 12px; }
+      h1 { font-size: 22px; }
+      .card { padding: 14px; border-radius: 18px; }
+      .progress { height: 6px; margin-bottom: 12px; }
+      #number { margin-bottom: 5px; font-size: 11px; }
+      #question { margin-bottom: 12px; font-size: 18px; }
+      .answers { gap: 7px; }
+      .answer { padding: 9px 12px; border-radius: 11px; font-size: 13px; }
+      #next { margin-top: 10px; padding: 10px 14px; }
+      #result strong { font-size: 40px; }
+    }
+
+    @media (orientation: portrait) and (max-width: 900px) {
+      .orientation-gate {
+        position: fixed;
+        z-index: 99999;
+        top: calc((100% - 100dvh) / 2);
+        left: calc((100% - 100vw) / 2);
+        width: 100vw;
+        height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        background: linear-gradient(rgba(234,248,255,.84), rgba(240,237,255,.84)), url("../asset/BG-all.png") center / cover no-repeat;
+        color: #183153;
+        font: 700 20px/1.6 Inter, sans-serif;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <h1>Latihan</h1>
+      <a href="../index.html">← Menu utama</a>
+    </div>
+
+    <section class="card" aria-live="polite">
+      <div id="quiz">
+        <div class="progress"><span id="progress"></span></div>
+        <p id="number"></p>
+        <h2 id="question"></h2>
+        <div class="answers" id="answers"></div>
+        <button id="next" type="button">Soal berikutnya</button>
+      </div>
+      <div id="result">
+        <strong id="score"></strong>
+        <h2>Latihan selesai</h2>
+        <button id="restart" class="answer" type="button" style="text-align:center">Ulangi latihan</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const questions = [
+      { text: "CPU merupakan otak utama komputer.", answer: true },
+      { text: "HDD lebih cepat daripada M.2 NVMe SSD saat booting.", answer: false },
+      { text: "RAM menyimpan data aplikasi yang sedang aktif untuk sementara waktu.", answer: true },
+      { text: "PSU berfungsi mengolah gambar dan video 3D.", answer: false },
+      { text: "GPU membantu menampilkan grafis, game, dan video.", answer: true }
+    ];
+
+    let index = 0;
+    let score = 0;
+    const quiz = document.querySelector("#quiz");
+    const result = document.querySelector("#result");
+    const number = document.querySelector("#number");
+    const question = document.querySelector("#question");
+    const answers = document.querySelector("#answers");
+    const progress = document.querySelector("#progress");
+    const next = document.querySelector("#next");
+
+    function showQuestion() {
+      const item = questions[index];
+      number.textContent = `Soal ${index + 1} dari ${questions.length}`;
+      question.textContent = item.text;
+      progress.style.width = `${((index + 1) / questions.length) * 100}%`;
+      answers.replaceChildren();
+      next.style.display = "none";
+
+      [
+        { text: "BENAR", value: true },
+        { text: "SALAH", value: false }
+      ].forEach((choice) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "answer";
+        button.textContent = choice.text;
+        button.dataset.answer = String(choice.value);
+        button.addEventListener("click", () => choose(button, choice.value));
+        answers.appendChild(button);
+      });
+    }
+
+    function choose(selected, choiceValue) {
+      const item = questions[index];
+      [...answers.children].forEach((button) => {
+        button.disabled = true;
+        if (button.dataset.answer === String(item.answer)) button.classList.add("correct");
+      });
+
+      if (choiceValue === item.answer) {
+        score++;
+      } else {
+        selected.classList.add("wrong");
+      }
+      next.style.display = "block";
+      next.textContent = index === questions.length - 1 ? "Lihat hasil" : "Soal berikutnya";
+    }
+
+    next.addEventListener("click", () => {
+      index++;
+      if (index < questions.length) {
+        showQuestion();
+      } else {
+        quiz.style.display = "none";
+        result.style.display = "block";
+        document.querySelector("#score").textContent = `${score}/${questions.length}`;
+      }
+    });
+
+    document.querySelector("#restart").addEventListener("click", () => {
+      index = 0;
+      score = 0;
+      result.style.display = "none";
+      quiz.style.display = "block";
+      showQuestion();
+    });
+
+    showQuestion();
+  </script>
+  <div class="orientation-gate" role="status" aria-live="polite">
+    <p>Putar perangkat Anda ke posisi horizontal untuk melanjutkan.</p>
+  </div>
+</body>
+</html>

@@ -75,7 +75,7 @@
                 </button>
 
                 <!-- Mulai Belajar -->
-                <button onclick="goToScreen('screen-menu')" class="btn-3d bg-pink-100 border-4 border-pink-300 rounded-3xl shadow-btn flex flex-col items-center justify-center p-4 hover:bg-pink-50 relative group">
+                <button onclick="openStartNameModal()" class="btn-3d bg-pink-100 border-4 border-pink-300 rounded-3xl shadow-btn flex flex-col items-center justify-center p-4 hover:bg-pink-50 relative group">
                     <img src="assets/images/play.png" alt="" class="w-20 h-20 md:w-24 md:h-24 object-contain mb-1 group-hover:scale-110 transition-transform drop-shadow-sm">
                     <span class="font-bold text-gray-800 text-sm md:text-xl leading-tight">Mulai<br>Belajar</span>
                     <div class="absolute bottom-[-15px] bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 border-white shadow"><i class="fas fa-chevron-right"></i></div>
@@ -89,6 +89,20 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div id="modal-start-name" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="start-name-title">
+        <form class="modal-content border-pink-400 w-full max-w-md" onsubmit="startLearning(event)">
+            <h2 id="start-name-title" class="text-2xl font-bold text-gray-800 mb-2">Siapa nama kamu?</h2>
+            <p class="text-gray-600 mb-4">Masukkan nama untuk ditampilkan pada sertifikat.</p>
+            <input id="student-name-input" name="studentName" type="text" maxlength="36" autocomplete="name" required
+                placeholder="Nama siswa" aria-label="Nama siswa"
+                class="w-full border-2 border-pink-200 rounded-xl px-4 py-3 text-lg text-center focus:outline-none focus:border-pink-400">
+            <div class="flex justify-center gap-3 mt-5">
+                <button type="button" onclick="closeModals()" class="bg-gray-200 text-gray-700 font-bold py-2 px-5 rounded-full btn-3d">Batal</button>
+                <button type="submit" class="bg-pink-500 text-white font-bold py-2 px-5 rounded-full shadow-btn btn-3d">Mulai Belajar</button>
+            </div>
+        </form>
     </div>
 
     <!-- ================= MODALS ================= -->
@@ -168,7 +182,7 @@
                 </div>
                 <div class="bg-blue-100 border border-blue-300 p-2 rounded-lg">
                     <span class="bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-bold mb-1 inline-block">6. Sertifikat</span>
-                    <p class="text-xs text-gray-700">Isi nama pada sertifikat dan unduh sebagai bukti belajar.</p>
+                    <p class="text-xs text-gray-700">Nama diisi saat mulai belajar, lalu unduh sertifikat sebagai bukti belajar.</p>
                 </div>
             </div>
             <button onclick="closeModals()" class="mt-4 bg-orange-500 text-white font-bold py-2 px-6 rounded-full shadow-btn btn-3d"><i class="fas fa-check mr-2"></i> Selamat Belajar!</button>
