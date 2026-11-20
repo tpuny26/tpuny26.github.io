@@ -172,7 +172,58 @@
     }
 
     #result { display: none; text-align: center; }
+    #quiz { display: none; }
     #result strong { display: block; font-size: 52px; color: var(--green); }
+    #name-screen { text-align: center; }
+    #name-screen h2 { margin: 0 0 8px; }
+    #name-screen p { margin: 0 0 18px; color: var(--muted); }
+    #name-form { display: flex; gap: 10px; }
+    #student-name {
+      flex: 1;
+      min-width: 0;
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      background: white;
+      padding: 13px 15px;
+      color: var(--ink);
+      font: inherit;
+    }
+    #student-name:focus { outline: 3px solid rgba(82, 189, 232, .25); border-color: var(--sky); }
+    #start {
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(100deg, var(--green), var(--sky));
+      padding: 13px 18px;
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    #feedback {
+      display: none;
+      margin-top: 14px;
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-weight: 750;
+    }
+    #feedback.correct-feedback { background: #edf9f5; color: #24866c; }
+    #feedback.wrong-feedback { background: #fff3f0; color: #b95d50; }
+    #result-name { margin: 4px 0 14px; color: var(--muted); }
+    .answer-overview {
+      width: 100%;
+      margin: 18px 0;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .answer-overview th,
+    .answer-overview td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 7px;
+      font-size: 13px;
+    }
+    .answer-overview th { color: var(--muted); }
+    .answer-overview .status-correct { color: #24866c; font-weight: 800; }
+    .answer-overview .status-wrong { color: #b95d50; font-weight: 800; }
 
     .orientation-gate { display: none; }
 
@@ -193,6 +244,10 @@
       .answer { padding: 9px 12px; border-radius: 11px; font-size: 13px; }
       #next { margin-top: 10px; padding: 10px 14px; }
       #result strong { font-size: 40px; }
+      #name-form { gap: 7px; }
+      #student-name, #start { padding: 9px 12px; }
+      #feedback { margin-top: 8px; padding: 8px 10px; }
+      .answer-overview th, .answer-overview td { padding: 5px 4px; font-size: 11px; }
     }
 
     @media (orientation: portrait) and (max-width: 900px) {
@@ -213,6 +268,7 @@
       }
     }
   </style>
+  <script src="../click-sound.js" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -222,16 +278,32 @@
     </div>
 
     <section class="card" aria-live="polite">
+      <div id="name-screen">
+        <h2>Siapa nama kamu?</h2>
+        <p>Masukkan nama sebelum memulai latihan.</p>
+        <form id="name-form">
+          <input id="student-name" type="text" maxlength="40" autocomplete="name" placeholder="Nama lengkap" required>
+          <button id="start" type="submit">Mulai</button>
+        </form>
+      </div>
       <div id="quiz">
         <div class="progress"><span id="progress"></span></div>
         <p id="number"></p>
         <h2 id="question"></h2>
         <div class="answers" id="answers"></div>
+        <div id="feedback"></div>
         <button id="next" type="button">Soal berikutnya</button>
       </div>
       <div id="result">
         <strong id="score"></strong>
         <h2>Latihan selesai</h2>
+        <p id="result-name"></p>
+        <table class="answer-overview">
+          <thead>
+            <tr><th>No.</th><th>Jawabanmu</th><th>Jawaban benar</th><th>Status</th></tr>
+          </thead>
+          <tbody id="answer-overview"></tbody>
+        </table>
         <button id="restart" class="answer" type="button" style="text-align:center">Ulangi latihan</button>
       </div>
     </section>
@@ -239,15 +311,45 @@
 
   <script>
     const questions = [
-      { text: "CPU merupakan otak utama komputer.", answer: true },
-      { text: "HDD lebih cepat daripada M.2 NVMe SSD saat booting.", answer: false },
-      { text: "RAM menyimpan data aplikasi yang sedang aktif untuk sementara waktu.", answer: true },
-      { text: "PSU berfungsi mengolah gambar dan video 3D.", answer: false },
-      { text: "GPU membantu menampilkan grafis, game, dan video.", answer: true }
+      {
+        text: "Saat membuka banyak aplikasi untuk mengerjakan tugas, laptop terasa lambat meski penyimpanan masih kosong. Komponen apa yang paling mungkin perlu ditambah?",
+        choices: ["RAM", "PSU", "Monitor", "Speaker"],
+        answer: 0,
+        explanation: "RAM membantu komputer menyimpan data aplikasi yang sedang aktif, sehingga multitasking lebih lancar."
+      },
+      {
+        text: "Kamu ingin membawa foto dan tugas ke komputer lain menggunakan penyimpanan portabel yang bisa langsung dicolokkan. Perangkat mana yang paling tepat digunakan?",
+        choices: ["SSD eksternal", "Adaptor Wi-Fi", "Catu daya", "Kartu grafis"],
+        answer: 0,
+        explanation: "SSD eksternal bisa menyimpan dan memindahkan data dengan cepat. Adaptor Wi-Fi digunakan untuk akses internet nirkabel."
+      },
+      {
+        text: "Komputer sering lag saat bermain game dan menonton video resolusi tinggi. Komponen mana yang sebaiknya ditingkatkan?",
+        choices: ["HDD", "Kartu grafis", "NIC", "CD-ROM"],
+        answer: 1,
+        explanation: "Kartu grafis memproses tampilan game, gambar, dan video agar berjalan lebih lancar."
+      },
+      {
+        text: "Saat menyimpan tugas sekolah, kamu ingin data tetap aman meski komputer mati dan tidak perlu dibuka segera. Komponen mana yang menyimpan data jangka panjang?",
+        choices: ["RAM", "CPU", "SSD atau HDD", "PSU"],
+        answer: 2,
+        explanation: "SSD atau HDD menyimpan data secara permanen meskipun komputer dimatikan."
+      },
+      {
+        text: "Komputer baru sudah dirakit, tetapi lampu dan kipas tidak menyala sama sekali. Komponen mana yang perlu diperiksa lebih dahulu?",
+        choices: ["Catu daya", "Monitor", "Memori", "Kartu Wi-Fi"],
+        answer: 0,
+        explanation: "Catu daya menyalurkan listrik ke seluruh komponen, jadi perlu diperiksa jika komponen sama sekali tidak menyala."
+      }
     ];
 
     let index = 0;
     let score = 0;
+    let studentName = "";
+    const answerRecords = [];
+    const nameScreen = document.querySelector("#name-screen");
+    const nameForm = document.querySelector("#name-form");
+    const studentNameInput = document.querySelector("#student-name");
     const quiz = document.querySelector("#quiz");
     const result = document.querySelector("#result");
     const number = document.querySelector("#number");
@@ -255,6 +357,38 @@
     const answers = document.querySelector("#answers");
     const progress = document.querySelector("#progress");
     const next = document.querySelector("#next");
+    const feedback = document.querySelector("#feedback");
+
+    function playTringSound() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+
+      const context = new AudioContext();
+      const start = context.currentTime;
+      [880, 1320].forEach((frequency, part) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const toneStart = start + part * 0.09;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, toneStart);
+        gain.gain.setValueAtTime(0.0001, toneStart);
+        gain.gain.exponentialRampToValueAtTime(0.08, toneStart + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, toneStart + 0.28);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(toneStart);
+        oscillator.stop(toneStart + 0.28);
+      });
+    }
+
+    nameForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      studentName = studentNameInput.value.trim();
+      if (!studentName) return;
+      nameScreen.style.display = "none";
+      quiz.style.display = "block";
+      showQuestion();
+    });
 
     function showQuestion() {
       const item = questions[index];
@@ -263,33 +397,44 @@
       progress.style.width = `${((index + 1) / questions.length) * 100}%`;
       answers.replaceChildren();
       next.style.display = "none";
+      feedback.style.display = "none";
+      feedback.className = "";
 
-      [
-        { text: "BENAR", value: true },
-        { text: "SALAH", value: false }
-      ].forEach((choice) => {
+      item.choices.forEach((choice, choiceIndex) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "answer";
-        button.textContent = choice.text;
-        button.dataset.answer = String(choice.value);
-        button.addEventListener("click", () => choose(button, choice.value));
+        button.textContent = choice;
+        button.dataset.answer = String(choiceIndex);
+        button.addEventListener("click", () => choose(button, choiceIndex));
         answers.appendChild(button);
       });
     }
 
     function choose(selected, choiceValue) {
       const item = questions[index];
+      const isCorrect = choiceValue === item.answer;
       [...answers.children].forEach((button) => {
         button.disabled = true;
-        if (button.dataset.answer === String(item.answer)) button.classList.add("correct");
+        if (Number(button.dataset.answer) === item.answer) button.classList.add("correct");
       });
 
-      if (choiceValue === item.answer) {
+      if (isCorrect) {
         score++;
+        selected.classList.add("correct");
       } else {
         selected.classList.add("wrong");
       }
+
+      answerRecords[index] = {
+        selected: item.choices[choiceValue],
+        correct: item.choices[item.answer],
+        isCorrect
+      };
+      feedback.textContent = `${isCorrect ? "Benar!" : "Belum tepat."} ${item.explanation}`;
+      feedback.className = isCorrect ? "correct-feedback" : "wrong-feedback";
+      feedback.style.display = "block";
+      playTringSound();
       next.style.display = "block";
       next.textContent = index === questions.length - 1 ? "Lihat hasil" : "Soal berikutnya";
     }
@@ -302,18 +447,26 @@
         quiz.style.display = "none";
         result.style.display = "block";
         document.querySelector("#score").textContent = `${score}/${questions.length}`;
+        document.querySelector("#result-name").textContent = `Nama peserta: ${studentName}`;
+        document.querySelector("#answer-overview").innerHTML = answerRecords.map((record, recordIndex) => `
+          <tr>
+            <td>${recordIndex + 1}</td>
+            <td>${record.selected}</td>
+            <td>${record.correct}</td>
+            <td class="${record.isCorrect ? "status-correct" : "status-wrong"}">${record.isCorrect ? "Benar" : "Salah"}</td>
+          </tr>
+        `).join("");
       }
     });
 
     document.querySelector("#restart").addEventListener("click", () => {
       index = 0;
       score = 0;
+      answerRecords.length = 0;
       result.style.display = "none";
       quiz.style.display = "block";
       showQuestion();
     });
-
-    showQuestion();
   </script>
   <div class="orientation-gate" role="status" aria-live="polite">
     <p>Putar perangkat Anda ke posisi horizontal untuk melanjutkan.</p>
