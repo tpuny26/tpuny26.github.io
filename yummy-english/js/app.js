@@ -119,7 +119,7 @@
 
         const destinations = {
             'screen-home': currentPage === 'home' ? 'index.html' : '../index.html',
-            'screen-menu': currentPage === 'home' ? 'pages/menu.html' : 'menu.html'
+            'screen-menu': currentPage === 'home' ? 'pages/menu2.html' : 'menu2.html'
         };
         if (destinations[screenId]) {
             navigateTo(destinations[screenId]);
@@ -159,6 +159,54 @@
         document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
     }
 
+    function showAlertModal(message, onClose = () => {}) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay app-alert-modal';
+        modal.style.display = 'flex';
+        modal.setAttribute('role', 'alertdialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'app-alert-title');
+        modal.tabIndex = -1;
+
+        const content = document.createElement('div');
+        content.className = 'modal-content app-alert-content';
+
+        const title = document.createElement('h2');
+        title.id = 'app-alert-title';
+        title.className = 'app-alert-title';
+        title.textContent = 'Informasi';
+
+        const messageText = document.createElement('p');
+        messageText.className = 'app-alert-message';
+        messageText.textContent = message;
+
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'app-alert-close';
+        closeButton.textContent = 'OK';
+
+        const close = () => {
+            modal.removeEventListener('keydown', handleKeydown);
+            modal.remove();
+            onClose();
+        };
+        const handleKeydown = event => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+            }
+        };
+
+        closeButton.addEventListener('click', close);
+        modal.addEventListener('keydown', handleKeydown);
+        content.append(title, messageText, closeButton);
+        modal.appendChild(content);
+
+        const modalHost = document.getElementById('game-container') || document.body;
+        modalHost.appendChild(modal);
+        closeButton.focus();
+    }
+
     function getFullscreenDocument() {
         if (window.top === window) return document;
 
@@ -188,21 +236,6 @@
         image.alt = '';
         button.appendChild(image);
 
-        const exitIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        exitIcon.classList.add('fullscreen-exit-icon');
-        exitIcon.setAttribute('viewBox', '0 0 24 24');
-        exitIcon.setAttribute('fill', 'none');
-        exitIcon.setAttribute('stroke', 'currentColor');
-        exitIcon.setAttribute('stroke-width', '2.5');
-        exitIcon.setAttribute('stroke-linecap', 'round');
-        exitIcon.setAttribute('stroke-linejoin', 'round');
-        exitIcon.setAttribute('aria-hidden', 'true');
-        const exitIconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        exitIconPath.setAttribute('d', 'M8 3v5H3M16 3v5h5M8 21v-5H3M16 21v-5h5');
-        exitIcon.appendChild(exitIconPath);
-        exitIcon.hidden = true;
-        button.appendChild(exitIcon);
-
         const pageToolbar = gameContainer.querySelector('.certificate-toolbar')
             || gameContainer.querySelector('.screen.active > .flex.justify-between.items-center');
         if (pageToolbar) {
@@ -225,14 +258,14 @@
             }
 
             if (!gameContainer?.requestFullscreen) {
-                alert('Browser tidak mendukung mode fullscreen.');
+                showAlertModal('Browser tidak mendukung mode fullscreen.');
                 return;
             }
 
             await gameContainer.requestFullscreen();
         } catch (error) {
             console.error('Gagal mengubah mode fullscreen:', error);
-            alert('Mode fullscreen tidak dapat diubah di browser ini.');
+            showAlertModal('Mode fullscreen tidak dapat diubah di browser ini.');
         }
     }
 
@@ -249,9 +282,11 @@
         button.setAttribute('aria-label', label);
         button.title = label;
         const image = button.querySelector('img');
-        const exitIcon = button.querySelector('.fullscreen-exit-icon');
-        image.hidden = isFullscreen;
-        exitIcon.hidden = !isFullscreen;
+        const fullscreenImageSrc = image.dataset.fullscreenSrc || image.getAttribute('src');
+        image.dataset.fullscreenSrc = fullscreenImageSrc;
+        image.src = isFullscreen
+            ? fullscreenImageSrc.replace(/fullscreen\.png$/, 'exit-fullscreen.png')
+            : fullscreenImageSrc;
     }
 
     getFullscreenDocument().addEventListener('fullscreenchange', updateFullscreenButton);
@@ -525,7 +560,7 @@
     function nextListening() {
         const questionCount = quizLengths.listening;
         if(!listAnswered && currentQuestionIndex < questionCount) {
-            alert("Pilih jawaban dulu ya!"); return;
+            showAlertModal('Pilih jawaban dulu ya!'); return;
         }
         listAnswered = false;
         currentQuestionIndex++;
@@ -873,7 +908,7 @@
     let speakAnswered = false;
     function nextSpeaking() {
         if (!speakAnswered) {
-            alert('Rekam suaramu dan ucapkan nama yang benar terlebih dahulu!');
+            showAlertModal('Rekam suaramu dan ucapkan nama yang benar terlebih dahulu!');
             return;
         }
         cancelSpeakingAttempt();
@@ -1011,7 +1046,7 @@
 
     function nextWriting() {
         if(!writeAnswered && document.getElementById('write-input').value === '') {
-             alert("Isi jawaban atau pilih dari Word Bank dulu ya!"); return;
+             showAlertModal('Isi jawaban atau pilih dari Word Bank dulu ya!'); return;
         }
         currentQuestionIndex++;
         saveState();
@@ -1021,10 +1056,9 @@
     // --- Finish Quiz ---
     function finishQuiz(type, score) {
         const totalQuestions = quizLengths[type.toLowerCase()] || maxQuestions;
-        alert(`Uji ${type} Selesai!
-Skor kamu: ${score} dari ${totalQuestions}`);
         saveState();
-        goToScreen('screen-menu');
+        showAlertModal(`Uji ${type} Selesai!
+Skor kamu: ${score} dari ${totalQuestions}`, () => goToScreen('screen-menu'));
     }
 
     function initCertificate() {
@@ -1045,7 +1079,7 @@ Skor kamu: ${score} dari ${totalQuestions}`);
     }
 
     function initializePage() {
-        if (currentPage === 'menu') {
+        if (currentPage === 'menu' || currentPage === 'menu2') {
             if (scores.listening > 0 || scores.speaking > 0 || scores.writing > 0) {
                 const certificateButton = document.getElementById('btn-sertifikat');
                 certificateButton.classList.remove('hidden');
@@ -1068,8 +1102,7 @@ Skor kamu: ${score} dari ${totalQuestions}`);
 
         const expectedQuestions = quizLengths[currentPage] || maxQuestions;
         if (currentQuiz.length !== expectedQuestions) {
-            alert('Mulai kuis dari halaman menu terlebih dahulu ya!');
-            goToScreen('screen-menu');
+            showAlertModal('Mulai kuis dari halaman menu terlebih dahulu ya!', () => goToScreen('screen-menu'));
             return;
         }
         initializeQuiz();

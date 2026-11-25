@@ -104,36 +104,6 @@ body {
     object-fit: contain;
 }
 
-.fullscreen-exit-icon {
-    display: none;
-    width: 1.5rem;
-    height: 1.5rem;
-}
-
-.fullscreen-button.fullscreen-button-exit {
-    display: grid;
-    place-items: center;
-    width: clamp(2.75rem, 5vw, 3.25rem);
-    height: clamp(2.75rem, 5vw, 3.25rem);
-    padding: 0;
-    border-radius: 9999px;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-    color: #1d4ed8;
-}
-
-.fullscreen-button.fullscreen-button-exit img {
-    display: none;
-}
-
-.fullscreen-button.fullscreen-button-exit .fullscreen-exit-icon {
-    display: block;
-}
-
-.fullscreen-button-page {
-    z-index: 40;
-}
-
 .writing-image-preview {
     position: absolute;
     inset: 0;
@@ -175,10 +145,6 @@ body {
     position: static;
     flex: 0 1 clamp(5rem, 12vw, 9rem);
     min-width: 0;
-}
-
-.fullscreen-button-inline.fullscreen-button-exit {
-    flex: 0 0 clamp(2.5rem, 5vw, 3rem);
 }
 
 .screen.active {
@@ -225,6 +191,45 @@ body {
     max-height: 90%;
     overflow-y: auto;
     text-align: center;
+}
+
+.app-alert-modal {
+    z-index: 1100;
+}
+
+.app-alert-content {
+    width: min(90%, 32rem);
+    border-color: #fbbf24;
+}
+
+.app-alert-title {
+    margin: 0 0 0.75rem;
+    color: #1f2937;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 700;
+}
+
+.app-alert-message {
+    margin: 0 0 1.25rem;
+    color: #374151;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    white-space: pre-line;
+}
+
+.app-alert-close {
+    padding: 0.5rem 2rem;
+    border: 0;
+    border-radius: 9999px;
+    background: #3b82f6;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.app-alert-close:focus-visible {
+    outline: 3px solid #1d4ed8;
+    outline-offset: 3px;
 }
 
 /* Book Layout for Menu */
