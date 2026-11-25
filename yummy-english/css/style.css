@@ -1138,6 +1138,116 @@ body[data-page="certificate"] #orientation-warning {
         font-size: clamp(0.7rem, 2vh, 0.9rem);
     }
 
+    #screen-writing {
+        padding: 0.5rem !important;
+    }
+
+    #screen-writing > .flex.justify-between.items-center {
+        flex-shrink: 0;
+        gap: 0.4rem;
+        margin-bottom: 0.4rem;
+    }
+
+    #screen-writing > .flex.justify-between.items-center > div {
+        padding: 0.2rem 0.5rem;
+        border-width: 2px;
+        font-size: clamp(0.7rem, 2.2vh, 1rem);
+    }
+
+    #screen-writing > .flex.justify-between.items-center > button {
+        padding: 0.2rem 0.55rem;
+        font-size: clamp(0.65rem, 2vh, 0.9rem);
+    }
+
+    #screen-writing > .flex.gap-4.flex-grow {
+        flex: 1;
+        min-height: 0;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-width: 2px;
+    }
+
+    #screen-writing .petunjuk-panel {
+        flex: 0 0 20%;
+        width: auto;
+        min-width: 0;
+        min-height: 0;
+        padding: 0.5rem;
+        border-width: 2px;
+        border-radius: 0.75rem;
+    }
+
+    #screen-writing .petunjuk-step {
+        gap: 0.2rem;
+        margin-bottom: 0.35rem;
+        font-size: clamp(0.55rem, 1.65vh, 0.75rem);
+    }
+
+    #screen-writing .petunjuk-panel > div.rounded-full {
+        flex-shrink: 0;
+        margin-bottom: 0.4rem;
+        font-size: clamp(0.6rem, 1.8vh, 0.8rem);
+    }
+
+    #screen-writing > .flex.gap-4.flex-grow > .w-2\/4 {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+        min-height: 0;
+        padding: 0.5rem;
+    }
+
+    #screen-writing > .flex.gap-4.flex-grow > .w-1\/4:last-child {
+        flex: 0 0 20%;
+        width: auto;
+        min-width: 0;
+        min-height: 0;
+        padding: 0.5rem;
+    }
+
+    #screen-writing #write-target-image {
+        width: clamp(2.5rem, 12vh, 5rem);
+        height: clamp(2.5rem, 12vh, 5rem);
+    }
+
+    #screen-writing #write-image-preview-trigger {
+        margin-block: 0.5rem;
+    }
+
+    #screen-writing > .flex.gap-4.flex-grow > .w-2\/4 > .w-full.bg-green-100 {
+        min-height: 0;
+        padding: 0.4rem;
+    }
+
+    #screen-writing #write-input {
+        margin-bottom: 0.35rem;
+        padding: 0.35rem;
+        font-size: clamp(0.8rem, 2.3vh, 1.1rem);
+    }
+
+    #screen-writing #write-feedback {
+        margin-top: 0.25rem;
+        min-height: 1rem;
+        font-size: clamp(0.6rem, 1.8vh, 0.8rem);
+    }
+
+    #screen-writing #word-bank-list {
+        min-height: 0;
+        gap: 0.25rem;
+        padding-bottom: 2.2rem;
+    }
+
+    #screen-writing #word-bank-list > button {
+        padding: 0.2rem;
+        font-size: clamp(0.55rem, 1.7vh, 0.75rem);
+        line-height: 1.1;
+    }
+
+    #screen-writing .absolute.bottom-4 button {
+        padding: 0.3rem 0.6rem;
+        font-size: clamp(0.6rem, 1.8vh, 0.8rem);
+    }
+
     #screen-menu .book-page > div.rounded-full {
         font-size: clamp(0.75rem, 1vw, 1.05rem);
     }
