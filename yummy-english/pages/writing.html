@@ -75,11 +75,22 @@
                     <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow"><i class="fas fa-pencil-alt mr-1"></i> Tulis nama dalam bahasa Inggris!</span>
                 </div>
                 
-                <img id="write-target-image" class="w-32 h-32 my-6 object-contain drop-shadow-xl" alt="">
+                <button id="write-image-preview-trigger" type="button" class="my-6 cursor-zoom-in rounded-xl focus-visible:outline focus-visible:outline-4 focus-visible:outline-blue-500" aria-label="Perbesar gambar">
+                    <img id="write-target-image" class="w-32 h-32 object-contain drop-shadow-xl" alt="">
+                </button>
                 
                 <div class="w-full bg-green-100 border border-green-200 rounded-xl p-4 flex flex-col items-center">
                     <label class="font-bold text-gray-700 mb-2">Tulis jawabanmu di sini:</label>
                     <input type="text" id="write-input" class="w-full border-2 border-gray-300 rounded-lg p-2 text-center font-bold text-xl text-blue-800 focus:outline-none focus:border-green-500 shadow-inner mb-3" placeholder="Type your answer here..." autocomplete="off">
+                    <div class="w-full text-center mb-3">
+                        <p class="font-bold text-gray-700 text-sm">Petunjuk huruf:</p>
+                        <p id="write-hint-pattern" class="font-bold text-blue-700 tracking-widest min-h-6 whitespace-pre-wrap" aria-live="polite"></p>
+                        <div class="flex justify-center gap-2 mt-2">
+                            <button type="button" class="writing-hint-btn bg-yellow-400 text-yellow-900 font-bold py-1 px-3 rounded-full shadow hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed" data-hint-level="1">Petunjuk 1</button>
+                            <button type="button" class="writing-hint-btn bg-yellow-400 text-yellow-900 font-bold py-1 px-3 rounded-full shadow hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed" data-hint-level="2" disabled>Petunjuk 2</button>
+                            <button type="button" class="writing-hint-btn bg-yellow-400 text-yellow-900 font-bold py-1 px-3 rounded-full shadow hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed" data-hint-level="3" disabled>Petunjuk 3</button>
+                        </div>
+                    </div>
                     <button onclick="checkWriting()" class="bg-green-500 text-white font-bold py-2 px-6 rounded-full shadow-btn btn-3d hover:bg-green-600 w-full flex justify-center items-center gap-2"><i class="fas fa-check-circle"></i> Periksa Jawaban</button>
                     <p id="write-feedback" class="mt-2 font-bold min-h-[24px] text-center"></p>
                 </div>
@@ -95,6 +106,12 @@
                 <div class="absolute bottom-4 right-4">
                     <button onclick="nextWriting()" class="bg-blue-500 text-white font-bold py-2 px-6 rounded-full shadow-btn btn-3d hover:bg-blue-600">Selanjutnya <i class="fas fa-chevron-right ml-1"></i></button>
                 </div>
+            </div>
+            <div id="writing-image-preview" class="writing-image-preview" role="dialog" aria-modal="true" aria-label="Preview gambar" aria-hidden="true" hidden>
+                <button id="writing-image-preview-close" type="button" class="writing-image-preview-close" aria-label="Tutup preview">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+                <img id="writing-image-preview-image" class="writing-image-preview-image" alt="">
             </div>
         </div>
     </div>

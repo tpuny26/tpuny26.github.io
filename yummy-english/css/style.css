@@ -104,14 +104,77 @@ body {
     object-fit: contain;
 }
 
+.fullscreen-button i {
+    font-size: 1.5rem;
+}
+
+.fullscreen-button.fullscreen-button-exit {
+    width: clamp(2.5rem, 5vw, 3rem);
+    aspect-ratio: 1;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    color: #1d4ed8;
+}
+
+.fullscreen-button.fullscreen-button-exit img {
+    display: none;
+}
+
+.fullscreen-button.fullscreen-button-exit i {
+    display: block;
+}
+
 .fullscreen-button-page {
     z-index: 40;
+}
+
+.writing-image-preview {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background: rgba(0, 0, 0, 0.88);
+}
+
+.writing-image-preview[hidden] {
+    display: none;
+}
+
+.writing-image-preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.writing-image-preview-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border: 0;
+    border-radius: 9999px;
+    background: #fff;
+    color: #1f2937;
+    font-size: 1.25rem;
+    cursor: pointer;
 }
 
 .fullscreen-button-inline {
     position: static;
     flex: 0 1 clamp(5rem, 12vw, 9rem);
     min-width: 0;
+}
+
+.fullscreen-button-inline.fullscreen-button-exit {
+    flex: 0 0 clamp(2.5rem, 5vw, 3rem);
 }
 
 .screen.active {
@@ -543,7 +606,7 @@ body[data-page="certificate"] #game-container {
 .certificate-canvas {
     position: relative;
     width: min(100%, 1100px);
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 3 / 2;
     overflow: hidden;
     border-radius: 22px;
     border: 4px solid rgba(237, 188, 108, 0.9);
@@ -572,8 +635,8 @@ body[data-page="certificate"] #game-container {
 }
 
 .certificate-student-name {
-    left: 50%;
-    top: 49%;
+    left: 45%;
+    top: 52%;
     width: 58%;
     transform: translate(-50%, -50%);
     font-size: clamp(1.4rem, 3vw, 3rem);
@@ -583,17 +646,17 @@ body[data-page="certificate"] #game-container {
 }
 
 .certificate-final-score {
-    left: 68%;
-    top: 58%;
+    left: 78.4%;
+    top: 60.5%;
     width: auto;
     min-width: 4rem;
     transform: translate(-50%, -50%);
-    font-size: clamp(1.2rem, 2vw, 2.4rem);
+    font-size: clamp(1.3rem, 2.2vw, 2.6rem);
 }
 
 .certificate-date {
-    left: 60%;
-    bottom: 16%;
+    left: 51%;
+    bottom: 9.5%;
     width: 45%;
     transform: translateX(-50%);
     font-size: clamp(0.8rem, 1.3vw, 1.3rem);
@@ -620,20 +683,20 @@ body[data-page="certificate"] #game-container {
     }
 
     .certificate-student-name {
-        top: 49%;
+        top: 52%;
         width: 64%;
         font-size: clamp(1.1rem, 5vw, 2.3rem);
     }
 
     .certificate-final-score {
-        left: 70%;
-        top: 58%;
-        font-size: clamp(1rem, 4vw, 1.8rem);
+        left: 78.4%;
+        top: 60.5%;
+        font-size: clamp(1.1rem, 4.4vw, 2rem);
     }
 
     .certificate-date {
-        left: 58%;
-        bottom: 17%;
+        left: 51%;
+        bottom: 9.5%;
         width: 50%;
         font-size: clamp(0.72rem, 2.5vw, 1rem);
     }
@@ -680,7 +743,7 @@ body[data-page="certificate"] #orientation-warning {
     .certificate-canvas {
         width: 100%;
         max-height: none;
-        aspect-ratio: 16 / 9;
+        aspect-ratio: 3 / 2;
         border: none;
         box-shadow: none;
     }
@@ -966,7 +1029,14 @@ body[data-page="certificate"] #orientation-warning {
     #screen-writing #write-target-image {
         width: clamp(2.5rem, 12vh, 5rem);
         height: clamp(2.5rem, 12vh, 5rem);
+    }
+
+    #screen-writing #write-image-preview-trigger {
         margin-block: 0.5rem;
+    }
+
+    .writing-image-preview {
+        padding: 3rem 1rem;
     }
 
     #screen-writing > .flex.gap-4.flex-grow > .w-2\/4 > .w-full.bg-green-100 {
@@ -1025,6 +1095,10 @@ body[data-page="certificate"] #orientation-warning {
 }
 
 @media (orientation: landscape) and (max-width: 900px) {
+    html {
+        font-size: clamp(6px, min(2.45dvh, 1.375vw), 18px);
+    }
+
     body[data-page]:not([data-page="certificate"]) #game-container {
         aspect-ratio: 16 / 9;
         width: min(100vw, 177.7778dvh);
@@ -1032,5 +1106,38 @@ body[data-page="certificate"] #orientation-warning {
         max-width: 100vw;
         max-height: 100dvh;
         border-radius: 0;
+    }
+
+    #screen-listening .petunjuk-step,
+    #screen-speaking .petunjuk-step,
+    #screen-writing .petunjuk-step {
+        font-size: clamp(0.65rem, 1.9vh, 0.85rem);
+    }
+
+    #screen-listening .petunjuk-panel > div.rounded-full,
+    #screen-speaking .petunjuk-panel > div.rounded-full,
+    #screen-writing .petunjuk-panel > div.rounded-full {
+        font-size: clamp(0.7rem, 2vh, 0.9rem);
+    }
+
+    #screen-listening #listening-options > div > div:last-child,
+    #screen-writing #word-bank-list > button {
+        font-size: clamp(0.65rem, 1.9vh, 0.85rem);
+    }
+
+    #screen-writing #write-feedback {
+        font-size: clamp(0.7rem, 2vh, 0.9rem);
+    }
+
+    #screen-menu .book-page > div.rounded-full {
+        font-size: clamp(0.75rem, 1vw, 1.05rem);
+    }
+
+    #screen-menu .menu-item > div:nth-child(2) {
+        font-size: clamp(0.68rem, 0.95vw, 1rem);
+    }
+
+    #screen-menu .menu-item > div:nth-child(3) {
+        font-size: clamp(0.65rem, 0.85vw, 0.9rem);
     }
 }

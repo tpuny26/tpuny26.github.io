@@ -102,6 +102,7 @@
                 pageFrame.className = 'fullscreen-page-frame';
                 pageFrame.title = 'Halaman permainan';
                 pageFrame.allowFullscreen = true;
+                pageFrame.allow = 'microphone';
                 gameContainer.appendChild(pageFrame);
             }
             pageFrame.src = destination.href;
@@ -112,7 +113,9 @@
     }
 
     function goToScreen(screenId) {
-        if(recognition && isRecording) { recognition.stop(); }
+        if (currentPage === 'speaking') {
+            cancelSpeakingAttempt();
+        }
 
         const destinations = {
             'screen-home': currentPage === 'home' ? 'index.html' : '../index.html',
@@ -185,6 +188,12 @@
         image.alt = '';
         button.appendChild(image);
 
+        const exitIcon = document.createElement('i');
+        exitIcon.className = 'fas fa-compress';
+        exitIcon.setAttribute('aria-hidden', 'true');
+        exitIcon.hidden = true;
+        button.appendChild(exitIcon);
+
         const pageToolbar = gameContainer.querySelector('.certificate-toolbar')
             || gameContainer.querySelector('.screen.active > .flex.justify-between.items-center');
         if (pageToolbar) {
@@ -223,11 +232,17 @@
         if (!button) return;
 
         const fullscreenDocument = getFullscreenDocument();
-        const label = fullscreenDocument.fullscreenElement
+        const isFullscreen = Boolean(fullscreenDocument.fullscreenElement);
+        const label = isFullscreen
             ? 'Keluar dari fullscreen'
             : 'Aktifkan fullscreen';
+        button.classList.toggle('fullscreen-button-exit', isFullscreen);
         button.setAttribute('aria-label', label);
         button.title = label;
+        const image = button.querySelector('img');
+        const exitIcon = button.querySelector('i');
+        image.hidden = isFullscreen;
+        exitIcon.hidden = !isFullscreen;
     }
 
     getFullscreenDocument().addEventListener('fullscreenchange', updateFullscreenButton);
@@ -512,56 +527,305 @@
 
     // --- UJI SPEAKING ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
+    let recognition = null;
     let isRecording = false;
+    let isStartingRecording = false;
+    let isRecognitionStarting = false;
+    let speakingAttemptId = 0;
+    let activeRecognitionAttemptId = 0;
+    let evaluatedRecognitionAttemptId = 0;
+    let recognitionErrorMessage = '';
+    let latestRecognitionTranscript = '';
+    let latestInterimTranscript = '';
+    let latestRecognitionAlternatives = [];
+
+    const normalizeSpeakingTranscript = value => value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/^(a |an |the )+/, '')
+        .replace(/\b(please|um|uh)\b/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    function speakingSimilarity(left, right) {
+        if (!left || !right) return 0;
+        if (left === right) return 1;
+
+        const rows = left.length + 1;
+        const columns = right.length + 1;
+        const distances = Array.from({ length: rows }, () => Array(columns).fill(0));
+        for (let row = 0; row < rows; row++) distances[row][0] = row;
+        for (let column = 0; column < columns; column++) distances[0][column] = column;
+
+        for (let row = 1; row < rows; row++) {
+            for (let column = 1; column < columns; column++) {
+                distances[row][column] = Math.min(
+                    distances[row - 1][column] + 1,
+                    distances[row][column - 1] + 1,
+                    distances[row - 1][column - 1] + (left[row - 1] === right[column - 1] ? 0 : 1)
+                );
+            }
+        }
+
+        const longest = Math.max(left.length, right.length);
+        return longest ? 1 - (distances[left.length][right.length] / longest) : 0;
+    }
+
+    function evaluateSpeakingTranscript(transcript, alternatives = []) {
+        if (activeRecognitionAttemptId !== speakingAttemptId
+            || speakAnswered
+            || evaluatedRecognitionAttemptId === activeRecognitionAttemptId
+            || !transcript) {
+            return;
+        }
+
+        const target = normalizeSpeakingTranscript(currentTarget.en);
+        const candidates = [...alternatives, transcript]
+            .map(normalizeSpeakingTranscript)
+            .filter(Boolean);
+        const isCorrect = candidates.some(candidate => {
+            if (candidate === target) return true;
+            if (candidate.includes(target) || target.includes(candidate)) {
+                const shorter = candidate.length < target.length ? candidate : target;
+                if (shorter.length <= 3) return candidate === target;
+            }
+            return speakingSimilarity(candidate, target) >= 0.82;
+        });
+
+        evaluatedRecognitionAttemptId = activeRecognitionAttemptId;
+        const resultElement = document.getElementById('record-result');
+        resultElement.className = isCorrect
+            ? 'text-lg font-bold text-green-600 whitespace-pre-wrap'
+            : 'text-lg font-bold text-red-600 whitespace-pre-wrap';
+        resultElement.innerText = isCorrect
+            ? `Benar! Terdengar: "${transcript}"`
+            : `Belum tepat. Terdengar: "${transcript}"`;
+
+        if (isCorrect) {
+            speakAnswered = true;
+            scores.speaking++;
+            saveState();
+            showFeedback(true, 'Nama makanan/minuman dikenali dengan benar!');
+        } else {
+            showFeedback(false, `Terdengar "${transcript}". Ucapkan "${currentTarget.en}" secara lengkap, lalu coba lagi.`);
+        }
+    }
 
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = true;
-        recognition.maxAlternatives = 3;
+        recognition.continuous = false;
+        recognition.maxAlternatives = 5;
 
         recognition.onstart = function() {
+            if (activeRecognitionAttemptId !== speakingAttemptId) {
+                try {
+                    recognition.abort();
+                } catch (error) {
+                    console.error('Gagal menghentikan pengenalan suara:', error);
+                }
+                return;
+            }
+
+            isStartingRecording = false;
+            isRecognitionStarting = false;
             isRecording = true;
-            document.getElementById('btn-record').classList.add('mic-recording');
-            document.getElementById('record-status').innerText = "Mendengarkan...";
-            document.getElementById('record-result').innerText = "";
+            const recordButton = document.getElementById('btn-record');
+            recordButton.disabled = false;
+            recordButton.classList.add('mic-recording');
+            document.getElementById('record-status').innerText = 'Mendengarkan... Klik mic untuk berhenti.';
+        };
+
+        recognition.onsoundstart = function() {
+            if (activeRecognitionAttemptId === speakingAttemptId) {
+                document.getElementById('record-status').innerText = 'Suara terdeteksi...';
+            }
+        };
+
+        recognition.onspeechstart = function() {
+            if (activeRecognitionAttemptId === speakingAttemptId) {
+                document.getElementById('record-status').innerText = 'Sedang mengenali ucapan...';
+            }
         };
 
         recognition.onresult = function(event) {
-            if (speakAnswered) return;
+            if (activeRecognitionAttemptId !== speakingAttemptId || speakAnswered) return;
 
-            const result = event.results[event.resultIndex];
-            const alternatives = Array.from(result, alternative =>
-                alternative.transcript.toLowerCase().replace(/[^a-z\s]/gi, '').trim()
-            ).filter(Boolean);
-            const resEl = document.getElementById('record-result');
-            const transcript = alternatives[0] || '';
+            const results = Array.from(event.results);
+            const transcript = results
+                .map(result => result[0]?.transcript || '')
+                .join(' ')
+                .trim();
+            const finalResults = results.filter(result => result.isFinal);
+            const finalTranscript = finalResults
+                .map(result => result[0]?.transcript || '')
+                .join(' ')
+                .trim();
+            const alternatives = finalResults
+                .flatMap(result => Array.from(result)
+                    .map(alternative => (alternative.transcript || '').trim()))
+                .filter(Boolean);
 
-            resEl.innerText = transcript ? `"${transcript}"` : '';
-            if (!result.isFinal) return;
-
-            const targetWord = currentTarget.en.toLowerCase();
-            const isMatch = alternatives.some(candidate =>
-                candidate.includes(targetWord) || targetWord.includes(candidate)
-            );
-            if (isMatch) {
-                resEl.className = "mt-2 text-lg font-bold text-green-600";
-                scores.speaking++;
-                saveState();
-                showFeedback(true, "Pengucapan sempurna!");
-                speakAnswered = true;
+            if (finalTranscript) {
+                latestRecognitionTranscript = finalTranscript;
+                latestInterimTranscript = '';
+                latestRecognitionAlternatives = [...new Set(alternatives)];
             } else {
-                resEl.className = "mt-2 text-lg font-bold text-red-600";
-                showFeedback(false, `Coba lagi! Seharusnya "${currentTarget.en}"`);
+                latestInterimTranscript = transcript;
+            }
+
+            const resultElement = document.getElementById('record-result');
+            resultElement.className = 'text-lg font-bold text-blue-700 whitespace-pre-wrap';
+            resultElement.innerText = transcript
+                ? `${finalTranscript ? 'Terdengar' : 'Sedang mengenali'}: "${transcript}"`
+                : '';
+
+            if (finalTranscript) {
+                evaluateSpeakingTranscript(finalTranscript, latestRecognitionAlternatives);
+                if (evaluatedRecognitionAttemptId === activeRecognitionAttemptId) {
+                    try {
+                        recognition.stop();
+                    } catch (error) {
+                        console.error('Gagal menghentikan pengenalan suara:', error);
+                    }
+                }
+            }
+        };
+
+        recognition.onerror = function(event) {
+            if (activeRecognitionAttemptId !== speakingAttemptId) return;
+
+            isRecognitionStarting = false;
+            const messages = {
+                'not-allowed': 'Izin mikrofon/pengenalan suara ditolak.',
+                'audio-capture': 'Mikrofon tidak ditemukan.',
+                'no-speech': 'Suara belum dikenali. Coba rekam lagi.',
+                nomatch: 'Suara terdengar, tetapi teks tidak dikenali. Coba ucapkan lebih jelas.',
+                network: 'Pengenalan suara gagal. Periksa koneksi internet.'
+            };
+            recognitionErrorMessage = messages[event.error] || 'Pengenalan suara gagal. Coba rekam lagi.';
+            document.getElementById('record-status').innerText = recognitionErrorMessage;
+        };
+
+        recognition.onnomatch = function() {
+            if (activeRecognitionAttemptId !== speakingAttemptId) return;
+            recognitionErrorMessage = latestInterimTranscript
+                ? 'Teks sementara ditampilkan. Coba ucapkan sekali lagi dengan jelas.'
+                : 'Browser mendengar suara, tetapi tidak mengirim teks. Coba rekam lagi.';
+            document.getElementById('record-status').innerText = recognitionErrorMessage;
+            if (latestInterimTranscript) {
+                const resultElement = document.getElementById('record-result');
+                resultElement.className = 'text-lg font-bold text-blue-700 whitespace-pre-wrap';
+                resultElement.innerText = `Teks sementara: "${latestInterimTranscript}"`;
             }
         };
 
         recognition.onend = function() {
+            if (activeRecognitionAttemptId !== speakingAttemptId) return;
+
             isRecording = false;
-            document.getElementById('btn-record').classList.remove('mic-recording');
-            document.getElementById('record-status').innerText = "Klik mic untuk ulang";
+            isStartingRecording = false;
+            isRecognitionStarting = false;
+            const recordButton = document.getElementById('btn-record');
+            recordButton.classList.remove('mic-recording');
+            recordButton.disabled = speakAnswered;
+            document.getElementById('record-status').innerText = recognitionErrorMessage
+                || (speakAnswered
+                    ? 'Jawaban benar. Kamu bisa lanjut ke soal berikutnya.'
+                    : latestRecognitionTranscript
+                        ? 'Teks berhasil dikenali. Klik mic untuk merekam ulang jika perlu.'
+                        : 'Teks belum dikenali. Klik mic untuk mencoba lagi.');
+        };
+    }
+
+    function cancelSpeakingAttempt() {
+        const shouldAbortRecognition = activeRecognitionAttemptId === speakingAttemptId
+            && (isRecognitionStarting || isRecording);
+        speakingAttemptId++;
+        activeRecognitionAttemptId = 0;
+        isStartingRecording = false;
+        isRecognitionStarting = false;
+        isRecording = false;
+        latestRecognitionTranscript = '';
+        latestInterimTranscript = '';
+        latestRecognitionAlternatives = [];
+        evaluatedRecognitionAttemptId = 0;
+
+        if (recognition && shouldAbortRecognition) {
+            try {
+                recognition.abort();
+            } catch (error) {
+                console.error('Gagal menghentikan pengenalan suara:', error);
+            }
         }
+
+    }
+
+    function startSpeakingAttempt() {
+        const recordButton = document.getElementById('btn-record');
+        if (!SpeechRecognition) {
+            document.getElementById('record-status').innerText =
+                'Pengenalan suara otomatis tidak didukung browser ini. Gunakan Chrome.';
+            return;
+        }
+        if (!window.isSecureContext) {
+            document.getElementById('record-status').innerText =
+                'Buka situs lewat HTTPS agar pengenalan suara dapat digunakan.';
+            return;
+        }
+
+        const attemptId = ++speakingAttemptId;
+        activeRecognitionAttemptId = attemptId;
+        recognitionErrorMessage = '';
+        isStartingRecording = true;
+        latestRecognitionTranscript = '';
+        latestInterimTranscript = '';
+        latestRecognitionAlternatives = [];
+        evaluatedRecognitionAttemptId = 0;
+        recordButton.disabled = true;
+        document.getElementById('record-status').innerText = 'Meminta izin mikrofon...';
+        document.getElementById('record-result').innerText = '';
+
+        try {
+            isRecognitionStarting = true;
+            recognition.start();
+        } catch (error) {
+            if (attemptId === speakingAttemptId) {
+                speakingAttemptId++;
+                activeRecognitionAttemptId = 0;
+                isStartingRecording = false;
+                isRecognitionStarting = false;
+                isRecording = false;
+                if (recognition) {
+                    try {
+                        recognition.abort();
+                    } catch (recognitionError) {
+                        console.error('Gagal menghentikan pengenalan suara:', recognitionError);
+                    }
+                }
+                recordButton.disabled = false;
+                document.getElementById('record-status').innerText =
+                    error.name === 'NotAllowedError'
+                        ? 'Izin mikrofon ditolak. Aktifkan izin mikrofon di pengaturan browser.'
+                        : error.name === 'NotFoundError'
+                            ? 'Mikrofon tidak ditemukan. Sambungkan mikrofon lalu coba lagi.'
+                            : 'Pengenalan suara tidak dapat dimulai. Coba lagi.';
+            }
+            console.error('Gagal memulai rekaman speaking:', error);
+        }
+    }
+
+    function playSpeakingExample() {
+        if (!currentTarget) return;
+        if (!('speechSynthesis' in window)) {
+            document.getElementById('record-status').innerText =
+                'Browser ini tidak mendukung audio contoh.';
+            return;
+        }
+        speak(currentTarget.en);
     }
 
     function initSpeaking() {
@@ -569,6 +833,7 @@
         
         document.getElementById('speak-q-num').innerText = `${currentQuestionIndex + 1}/${maxQuestions}`;
         currentTarget = currentQuiz[currentQuestionIndex];
+        evaluatedRecognitionAttemptId = 0;
         
         const targetImage = document.getElementById('speak-target-image');
         targetImage.src = menuImagePath(currentTarget);
@@ -577,21 +842,32 @@
         
         document.getElementById('record-result').innerText = "";
         document.getElementById('record-status').innerText = "Klik mic untuk mulai";
+        document.getElementById('btn-record').disabled = false;
         speakAnswered = false;
+        latestRecognitionTranscript = '';
+        latestInterimTranscript = '';
+        latestRecognitionAlternatives = [];
+        evaluatedRecognitionAttemptId = 0;
     }
 
     function toggleRecord() {
-        if(!SpeechRecognition) {
-            alert("Maaf, browser kamu tidak mendukung fitur suara. Coba gunakan Chrome.");
+        if (isStartingRecording) return;
+        if (isRecording) {
+            document.getElementById('btn-record').disabled = true;
+            document.getElementById('record-status').innerText = 'Menyelesaikan pengenalan suara...';
+            recognition.stop();
             return;
         }
-        if(isRecording) { recognition.stop(); } 
-        else { try { recognition.start(); } catch(e){} }
+        startSpeakingAttempt();
     }
 
     let speakAnswered = false;
     function nextSpeaking() {
-        // Allow passing even if failed or no mic
+        if (!speakAnswered) {
+            alert('Rekam suaramu dan ucapkan nama yang benar terlebih dahulu!');
+            return;
+        }
+        cancelSpeakingAttempt();
         currentQuestionIndex++;
         saveState();
         initSpeaking();
@@ -612,6 +888,14 @@
         inputEl.value = '';
         inputEl.disabled = false;
         document.getElementById('write-feedback').innerText = '';
+        writeHintsUsed = 0;
+        updateWritingHint();
+        document.querySelectorAll('.writing-hint-btn').forEach(button => {
+            const level = Number(button.dataset.hintLevel);
+            button.disabled = level !== 1;
+            button.innerText = `Petunjuk ${level}`;
+            button.onclick = () => useWritingHint(level);
+        });
         
         // Setup Word Bank (1 correct + 5 random wrong)
         let words = [currentTarget.en];
@@ -632,7 +916,66 @@
         writeAnswered = false;
     }
 
+    function setupWritingImagePreview() {
+        const trigger = document.getElementById('write-image-preview-trigger');
+        const preview = document.getElementById('writing-image-preview');
+        const previewImage = document.getElementById('writing-image-preview-image');
+        const closeButton = document.getElementById('writing-image-preview-close');
+        if (!trigger || !preview || !previewImage || !closeButton) return;
+
+        const closePreview = () => {
+            preview.hidden = true;
+            preview.setAttribute('aria-hidden', 'true');
+            trigger.focus();
+        };
+
+        trigger.addEventListener('click', () => {
+            const targetImage = document.getElementById('write-target-image');
+            previewImage.src = targetImage.src;
+            previewImage.alt = targetImage.alt;
+            preview.hidden = false;
+            preview.setAttribute('aria-hidden', 'false');
+            closeButton.focus();
+        });
+        closeButton.addEventListener('click', closePreview);
+        preview.addEventListener('click', event => {
+            if (event.target === preview) closePreview();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !preview.hidden) closePreview();
+        });
+    }
+
     let writeAnswered = false;
+    let writeHintsUsed = 0;
+
+    function updateWritingHint() {
+        const answer = currentTarget.en.toLowerCase();
+        const letterCount = answer.replace(/[^a-z]/g, '').length;
+        const visibleLetters = Math.min(letterCount - 1, Math.ceil(letterCount * writeHintsUsed / 4));
+        let letterIndex = 0;
+        const pattern = answer.split(' ').map(word =>
+            [...word].map(letter => {
+                letterIndex++;
+                return letterIndex <= visibleLetters ? letter : '_';
+            }).join(' ')
+        ).join('   ');
+
+        document.getElementById('write-hint-pattern').innerText = pattern;
+    }
+
+    function useWritingHint(level) {
+        if (writeAnswered || level !== writeHintsUsed + 1) return;
+
+        writeHintsUsed = level;
+        updateWritingHint();
+        document.querySelectorAll('.writing-hint-btn').forEach(button => {
+            const buttonLevel = Number(button.dataset.hintLevel);
+            button.disabled = buttonLevel !== writeHintsUsed + 1;
+            if (buttonLevel === level) button.innerText = `Petunjuk ${level} ✓`;
+        });
+    }
+
     function checkWriting() {
         if(writeAnswered) return;
         
@@ -647,6 +990,9 @@
             saveState();
             document.getElementById('write-input').disabled = true;
             writeAnswered = true;
+            document.querySelectorAll('.writing-hint-btn').forEach(button => {
+                button.disabled = true;
+            });
             showFeedback(true, "Ejaanmu tepat!");
         } else {
             feedback.innerText = "Coba lagi! 🤔";
@@ -720,4 +1066,5 @@ Skor kamu: ${score} dari ${totalQuestions}`);
         initializeQuiz();
     }
 
+    setupWritingImagePreview();
     initializePage();
