@@ -188,9 +188,18 @@
         image.alt = '';
         button.appendChild(image);
 
-        const exitIcon = document.createElement('i');
-        exitIcon.className = 'fas fa-compress';
+        const exitIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        exitIcon.classList.add('fullscreen-exit-icon');
+        exitIcon.setAttribute('viewBox', '0 0 24 24');
+        exitIcon.setAttribute('fill', 'none');
+        exitIcon.setAttribute('stroke', 'currentColor');
+        exitIcon.setAttribute('stroke-width', '2.5');
+        exitIcon.setAttribute('stroke-linecap', 'round');
+        exitIcon.setAttribute('stroke-linejoin', 'round');
         exitIcon.setAttribute('aria-hidden', 'true');
+        const exitIconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        exitIconPath.setAttribute('d', 'M8 3v5H3M16 3v5h5M8 21v-5H3M16 21v-5h5');
+        exitIcon.appendChild(exitIconPath);
         exitIcon.hidden = true;
         button.appendChild(exitIcon);
 
@@ -240,7 +249,7 @@
         button.setAttribute('aria-label', label);
         button.title = label;
         const image = button.querySelector('img');
-        const exitIcon = button.querySelector('i');
+        const exitIcon = button.querySelector('.fullscreen-exit-icon');
         image.hidden = isFullscreen;
         exitIcon.hidden = !isFullscreen;
     }
